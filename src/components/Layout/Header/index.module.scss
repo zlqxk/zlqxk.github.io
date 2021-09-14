@@ -1,0 +1,16 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .title {
+    font-size: 1.98818rem;
+    line-height: 2.625rem;
+
+    a {
+      box-shadow: none;
+      text-decoration: none;
+      color: var(--textTitle);
+    }
+  }
+}
