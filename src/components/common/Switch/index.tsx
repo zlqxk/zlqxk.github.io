@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Image from 'next/image'
 import styles from './index.module.scss'
 import cs from 'classnames'
 import type { SwitchProps } from './interface'
@@ -17,7 +18,15 @@ const Switch: React.FC<SwitchProps> = () => {
 
   return (
     <div className={styles.switch} onClick={handleSwitch}>
-      <div className={styles.switchWarp}></div>
+      <div className={styles.switchWarp}>
+        <div className={styles.switchLeft}>
+          {' '}
+          <Image src='/moon.png' alt='' width={16} height={16} />
+        </div>
+        <div className={styles.switchRigth}>
+          <Image src='/sun.png' alt='' width={16} height={16} />
+        </div>
+      </div>
       <div className={checkCls}></div>
     </div>
   )

@@ -1,3 +1,24 @@
 .app {
   color: var(--foo);
+
+  .article {
+    margin-top: 60px;
+
+    .title {
+      font-family: 'Montserrat';
+      font-size: 1.75rem;
+      margin-bottom: 0.4375rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+
+      a {
+        color: var(--textLink);
+        text-decoration: none;
+      }
+    }
+
+    .subtitle {
+      margin-top: 10px;
+    }
+  }
 }

@@ -45,4 +45,37 @@
       transform: translateX(26px);
     }
   }
+
+  .switchLeft,
+  .switchRigth {
+    position: absolute;
+    width: 17px;
+    height: 17px;
+    top: 0;
+    bottom: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+    line-height: 0;
+    transition: opacity 0.25s ease;
+
+    img {
+      max-width: 100%;
+      margin-left: 0;
+      margin-right: 0;
+      margin-top: 0;
+      padding-bottom: 0;
+      padding-left: 0;
+      padding-right: 0;
+      padding-top: 0;
+      margin-bottom: 1.75rem;
+    }
+  }
+
+  .switchRigth {
+    right: 5px;
+  }
+
+  .switchLeft {
+    left: 5px;
+  }
 }
