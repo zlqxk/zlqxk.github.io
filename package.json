@@ -17,6 +17,9 @@
   "dependencies": {
     "classnames": "^2.3.1",
     "dayjs": "^1.10.7",
+    "highlight.js": "^11.2.0",
+    "markdown": "^0.5.0",
+    "markdown-it": "^12.2.0",
     "modern-normalize": "^1.1.0",
     "next": "11.1.2",
     "react": "17.0.2",
@@ -24,6 +27,7 @@
     "sass": "^1.39.2"
   },
   "devDependencies": {
+    "@types/markdown-it": "^12.2.1",
     "@types/react": "17.0.20",
     "eslint": "7.32.0",
     "eslint-config-next": "11.1.2",

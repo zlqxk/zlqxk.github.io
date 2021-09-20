@@ -5,8 +5,8 @@ import catalogue from '../catalogue'
 const Home: NextPage = () => {
   return (
     <div className={styles.app}>
-      {catalogue.map((item) => (
-        <article className={styles.article}>
+      {catalogue.map((item, index) => (
+        <article className={styles.article} key={index}>
           <header>
             <h3 className={styles.title}>
               <a href=''>{item.title}</a>
