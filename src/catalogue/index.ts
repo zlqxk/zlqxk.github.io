@@ -1,17 +1,14 @@
 export default [
   {
-    title: 'npm audit: Broken by Design',
-    subtitle: 'Found 99 vulnerabilities (84 moderately irrelevant, 15 highly irrelevant)',
-    dateAndTime: 'July 7, 2021 • ☕️☕️☕️ 14 min read',
+    title: 'Babel 浅谈',
+    subtitle: 'Babel一些常见的使用场景，Babel的核心模板介绍，Babel 插件的开发。',
+    dateAndTime: 'November 1, 2021 • ☕️☕️☕️ 30 min read',
+    herf: '/front-end-compilation',
   },
   {
-    title: 'Before You memo()',
-    subtitle: 'Rendering optimizations that come naturally.',
-    dateAndTime: 'February 23, 2021 • ☕️ 5 min read',
-  },
-  {
-    title: 'The WET Codebase',
-    subtitle: 'Come waste your time with me.',
-    dateAndTime: 'July 13, 2020 • ☕️ 1 min read',
+    title: 'Redux 源码解析',
+    subtitle: 'Redux 源码解析',
+    dateAndTime: 'November 4, 2021 • ☕️☕️☕️ 80 min read',
+    herf: '/redux-source-code',
   },
 ]

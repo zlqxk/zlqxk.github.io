@@ -13,7 +13,10 @@ const Post: NextPage<PostProps> = (props) => {
 
 export const getStaticPaths: GetStaticPaths = async () => {
   return {
-    paths: [{ params: { post: 'front-end-compilation' } }],
+    paths: [
+      { params: { post: 'front-end-compilation' } },
+      { params: { post: 'redux-source-code' } },
+    ],
     fallback: false,
   }
 }

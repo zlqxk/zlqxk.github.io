@@ -7,7 +7,7 @@ const Header: React.FC<HeaderProps> = () => {
   return (
     <div className={styles.header}>
       <h1 className={styles.title}>
-        <a href=''>Overreacted</a>
+        <a href='/'>BLOG ZHANG</a>
       </h1>
       <Switch />
     </div>

@@ -9,7 +9,7 @@ const Home: NextPage = () => {
         <article className={styles.article} key={index}>
           <header>
             <h3 className={styles.title}>
-              <a href=''>{item.title}</a>
+              <a href={item.herf}>{item.title}</a>
             </h3>
             <small>{item.dateAndTime}</small>
           </header>
