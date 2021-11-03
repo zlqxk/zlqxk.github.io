@@ -1,4 +1,5 @@
 import type { NextPage } from 'next'
+import Link from 'next/link'
 import styles from './index.module.scss'
 import catalogue from '../catalogue'
 
@@ -9,7 +10,7 @@ const Home: NextPage = () => {
         <article className={styles.article} key={index}>
           <header>
             <h3 className={styles.title}>
-              <a href={item.herf}>{item.title}</a>
+              <Link href={item.href}>{item.title}</Link>
             </h3>
             <small>{item.dateAndTime}</small>
           </header>

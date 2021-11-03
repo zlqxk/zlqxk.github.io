@@ -1,9 +1,9 @@
 import path from 'path'
 import styles from './index.module.scss'
 import type { NextPage, GetStaticProps, GetStaticPaths } from 'next'
-import type { PostProps, QueryProps } from './interface'
+import type { PostProps, QueryProps } from '../../components/pages/post/interface'
 import { promises as fs } from 'fs'
-import md from './md2html'
+import md from '../../components/pages/post/md2html'
 import 'highlight.js/styles/atom-one-dark.css'
 
 const Post: NextPage<PostProps> = (props) => {
