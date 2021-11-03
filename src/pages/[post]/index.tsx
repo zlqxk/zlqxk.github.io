@@ -13,7 +13,7 @@ const Post: NextPage<PostProps> = (props) => {
 
 export const getStaticPaths: GetStaticPaths = async () => {
   return {
-    paths: [{ params: { post: 'test1' } }, { params: { post: 'test2' } }],
+    paths: [{ params: { post: 'front-end-compilation' } }],
     fallback: false,
   }
 }
