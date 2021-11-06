@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 80",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 80",
     "pm2": "pm2 start npm -- run start",
+    "stop": "pm2 stop",
     "lint": "next lint",
     "commit": "git-cz"
   },

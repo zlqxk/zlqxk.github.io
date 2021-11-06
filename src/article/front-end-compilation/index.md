@@ -56,7 +56,7 @@ Statement 指的是语句，比如我们写的 if 语句，for 语句，while �
 
 Expression 是表达式，例如赋值表达式，比较表达式等
 
-![NumericLiteral](/front-end-compilation/WhileStatement.jpg)
+![BinaryExpression](/front-end-compilation/BinaryExpression.jpg)
 
 Babel parse 的 AST 还有很多节点类型，想详细了解可以通过查阅[文档](https://babeljs.io/docs/en/babel-types)。
 
@@ -65,7 +65,7 @@ Babel parse 的 AST 还有很多节点类型，想详细了解可以通过查阅
 @babel/parser，之前也被称作 Babylon，他的主要作用就是将源代码转换为 AST。并且支持以下四种能力。
 
 - 默认启用最新的 ECMAScript 版本（ES2020）。
-- Comment attachment（不知如何翻译...）。
+- 注释。
 - 支持 JSX、Flow、Typescript。
 - 支持实验性语言提案（接受任何至少 stage-0 的 PR ）。
 
