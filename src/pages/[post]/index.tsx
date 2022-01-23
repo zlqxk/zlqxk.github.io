@@ -17,6 +17,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
       { params: { post: 'front-end-compilation' } },
       { params: { post: 'redux-source-code' } },
       { params: { post: 'longest-palindromic-substring' } },
+      { params: { post: 'container-with-most-water' } },
     ],
     fallback: false,
   }

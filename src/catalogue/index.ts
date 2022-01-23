@@ -17,4 +17,10 @@ export default [
     dateAndTime: 'Jan 23, 2022 • ☕️☕️☕️ 10 min read',
     href: '/longest-palindromic-substring',
   },
+  {
+    title: '「力扣」盛最多水的容器',
+    subtitle: '盛最多水的容器',
+    dateAndTime: 'Jan 23, 2022 • ☕️☕️☕️ 10 min read',
+    href: 'container-with-most-water',
+  },
 ]
