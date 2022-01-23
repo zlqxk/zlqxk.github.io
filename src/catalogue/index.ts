@@ -11,4 +11,10 @@ export default [
     dateAndTime: 'November 4, 2021 • ☕️☕️☕️ 80 min read',
     href: '/redux-source-code',
   },
+  {
+    title: '「力扣」最长回文子串',
+    subtitle: '最长回文子串',
+    dateAndTime: 'Jan 23, 2022 • ☕️☕️☕️ 10 min read',
+    href: '/longest-palindromic-substring',
+  },
 ]
