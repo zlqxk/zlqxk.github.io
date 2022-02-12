@@ -20,6 +20,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
       { params: { post: 'container-with-most-water' } },
       { params: { post: '3sum' } },
       { params: { post: 'letter-combinations-of-a-phone-number' } },
+      { params: { post: 'react-source-1' } },
     ],
     fallback: false,
   }
