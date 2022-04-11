@@ -1,12 +1,38 @@
 .footer {
   margin-top: 40px;
-  display: flex;
-  justify-content: center;
 
-  a {
+  .footerInfo {
+    display: flex;
+    justify-content: center;
+
+    a {
+      box-shadow: none;
+      text-decoration: none;
+      font-weight: 900;
+      color: var(--textLink);
+
+      &:nth-child(2) {
+        margin-left: 20px;
+        font-size: 14px;
+        font-weight: 400;
+      }
+    }
+  }
+
+  .footerPvUv {
+    text-align: center;
     box-shadow: none;
     text-decoration: none;
-    font-weight: 900;
+    display: block !important;
     color: var(--textLink);
+    font-weight: 900;
+    font-size: 12px;
+    margin-top: 12px;
+
+    >span {
+      &:nth-child(1) {
+        margin-right: 12px;
+      }
+    }
   }
 }

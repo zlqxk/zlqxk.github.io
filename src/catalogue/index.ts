@@ -2,7 +2,7 @@ export default [
   {
     title: '「React」React 中的二进制运算',
     subtitle: 'React 中的二进制运算',
-    dateAndTime: 'Apr 07, 2022 • ☕️☕️☕️ 15 min read',
+    dateAndTime: 'Apr 07, 2022 • ☕️☕️☕️ 30 min read',
     href: '/react-binary-operation',
   },
   // {

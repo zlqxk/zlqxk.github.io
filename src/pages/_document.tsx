@@ -5,6 +5,7 @@ class MyDocument extends Document {
     return (
       <Html>
         <Head />
+        <script async src='//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js'></script>
         <body className='dark'>
           <Main />
           <NextScript />
