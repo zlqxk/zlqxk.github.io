@@ -23,13 +23,14 @@
     text-align: center;
     box-shadow: none;
     text-decoration: none;
-    display: block !important;
+    display: flex !important;
+    justify-content: center;
     color: var(--textLink);
-    font-weight: 900;
+    font-weight: 700;
     font-size: 12px;
     margin-top: 12px;
 
-    >span {
+    >p {
       &:nth-child(1) {
         margin-right: 12px;
       }
