@@ -1,8 +1,7 @@
 export default [
   {
     title: '如何调试 react 源码',
-    subtitle:
-      '为了更方便的阅读和调试react源码，本文将搭建一个react源码开发环境，并且debug其关键函数的执行。',
+    subtitle: '手把手搭建一个 react 源码的调试环境',
     dateAndTime: '4月 12, 2022 • ☕️☕️☕️ 30 min read',
     href: '/react-source-dev',
   },
