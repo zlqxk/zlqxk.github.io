@@ -1,23 +1,44 @@
 .app {
   color: var(--foo);
+  display: flex;
 
-  .article {
-    margin-top: 60px;
+  .content {
+    flex: 1;
 
-    .title {
-      font-size: 1.75rem;
-      margin-bottom: 0.4375rem;
-      font-weight: 900;
-      margin-bottom: 8px;
+    .article {
+      margin-top: 60px;
+
+      .title {
+        font-size: 1.75rem;
+        margin-bottom: 0.4375rem;
+        font-weight: 900;
+        margin-bottom: 8px;
+
+        a {
+          color: var(--textLink);
+          text-decoration: none;
+        }
+      }
+
+      .subtitle {
+        margin-top: 10px;
+      }
+    }
+  }
+
+  .menu {
+    margin-top: 48px;
+    // width: 140px;
+
+    .menuItem {
+      font-size: 16px;
+      padding: 6px 4px;
+      border-bottom: 1px dashed #ccc;
 
       a {
         color: var(--textLink);
         text-decoration: none;
       }
-    }
-
-    .subtitle {
-      margin-top: 10px;
     }
   }
 }

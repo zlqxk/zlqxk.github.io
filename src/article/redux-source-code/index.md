@@ -1,6 +1,6 @@
 # Redux 源码解析
 
-November 4, 2021 • ☕️☕️☕️ 80 min read
+11月 04, 2021 • ☕️☕️☕️ 80 min read
 
 ## 目录：
 

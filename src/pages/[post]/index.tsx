@@ -18,6 +18,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
       { params: { post: 'redux-source-code' } },
       { params: { post: 'react-source-1' } },
       { params: { post: 'react-binary-operation' } },
+      { params: { post: 'react-source-dev' } },
     ],
     fallback: false,
   }
