@@ -6,8 +6,9 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
-    "pm2": "pm2 start npm -- run start",
+    "pm2": "npm run build && pm2 start npm -- run start",
     "stop": "pm2 stop",
+    "rp": "pm2 stop all && sudo rm -rf ~/.pm2 && npm run pm2",
     "lint": "next lint",
     "commit": "git-cz"
   },

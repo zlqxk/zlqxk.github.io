@@ -1,14 +1,27 @@
 import path from 'path'
 import styles from './index.module.scss'
+import md from '../../components/pages/post/md2html'
+import ImgPreview from '../../components/common/ImgPreview'
 import type { NextPage, GetStaticProps, GetStaticPaths } from 'next'
 import type { PostProps, QueryProps } from '../../components/pages/post/interface'
 import { promises as fs } from 'fs'
-import md from '../../components/pages/post/md2html'
+import { useImgPreview } from '../../hooks/useImgPreview'
 import 'highlight.js/styles/atom-one-dark.css'
 
 const Post: NextPage<PostProps> = (props) => {
   const { content } = props
-  return <article className={styles.article} dangerouslySetInnerHTML={{ __html: content }} />
+  const [containerRef, visible, src, setVisible] = useImgPreview()
+
+  return (
+    <>
+      <ImgPreview visible={visible} src={src} onClose={() => setVisible(false)} />
+      <article
+        ref={containerRef}
+        className={styles.article}
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
+    </>
+  )
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {

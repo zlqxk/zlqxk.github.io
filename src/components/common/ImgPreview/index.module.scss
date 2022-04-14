@@ -1,0 +1,29 @@
+.imgPreview {
+  display: none;
+  position: fixed;
+  margin: auto;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba($color: #000000, $alpha: 0.9);
+
+  &.visible {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  img {
+    @media screen and (max-width: 768px) {
+      width: 98%;
+      height: auto;
+    }
+
+    @media screen and (min-width: 769px) {
+      max-height: 80vh;
+      max-width: 90vw;
+    }
+  }
+}
