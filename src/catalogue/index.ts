@@ -1,6 +1,12 @@
 export default [
   {
-    title: '如何调试 react 源码',
+    title: '如何使用vscode中的Debug功能',
+    subtitle: '如何使用vscode中的debug功能',
+    dateAndTime: '4月 14, 2022 • ☕️☕️☕️ 10 min read',
+    href: '/how-use-vscode-debug',
+  },
+  {
+    title: '搭建 React 源码调试环境',
     subtitle: '手把手搭建一个 react 源码的调试环境',
     dateAndTime: '4月 12, 2022 • ☕️☕️☕️ 30 min read',
     href: '/react-source-dev',

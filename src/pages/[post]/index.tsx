@@ -32,6 +32,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
       { params: { post: 'react-source-1' } },
       { params: { post: 'react-binary-operation' } },
       { params: { post: 'react-source-dev' } },
+      { params: { post: 'how-use-vscode-debug' } },
     ],
     fallback: false,
   }
