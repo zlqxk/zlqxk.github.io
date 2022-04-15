@@ -11,7 +11,7 @@ const Home: NextPage = () => {
           <article className={styles.article} key={index}>
             <header>
               <h3 className={styles.title}>
-                <Link href={item.href}>{item.title}</Link>
+                <Link href={`/${item.href}`}>{item.title}</Link>
               </h3>
               <small>{item.dateAndTime}</small>
             </header>
