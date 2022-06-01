@@ -1,5 +1,11 @@
 export default [
   {
+    title: 'vite 小结',
+    subtitle: 'vite 小结',
+    dateAndTime: '5月 30, 2022 • ☕️☕️☕️ 20 min read',
+    href: 'vite',
+  },
+  {
     title: '如何使用vscode中的Debug功能',
     subtitle: '如何使用vscode中的debug功能',
     dateAndTime: '4月 14, 2022 • ☕️☕️☕️ 10 min read',
