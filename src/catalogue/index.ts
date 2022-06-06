@@ -1,5 +1,11 @@
 export default [
   {
+    title: 'webpack 优化指南',
+    subtitle: 'webpack 优化指南',
+    dateAndTime: '6月 6, 2022 • ☕️☕️☕️ 30 min read',
+    href: 'webpack-optimization',
+  },
+  {
     title: 'vite 小结',
     subtitle: 'vite 小结',
     dateAndTime: '5月 30, 2022 • ☕️☕️☕️ 20 min read',
