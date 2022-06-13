@@ -5,7 +5,6 @@ class MyDocument extends Document {
     return (
       <Html>
         <Head>
-          <title>awesome blog</title>
           <meta name='keywords' content='前端,react,babel,ts,typescript,学习记录' />
           <meta
             name='description'
