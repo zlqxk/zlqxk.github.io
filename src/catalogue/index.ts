@@ -1,13 +1,19 @@
 export default [
   {
-    title: 'https 通信过程',
-    subtitle: 'https 通信过程',
+    title: '控制反转和依赖注入',
+    subtitle: '控制反转和依赖注入',
+    dateAndTime: '6月 14, 2022 • ☕️☕️☕️ 20 min read',
+    href: 'ioc-di',
+  },
+  {
+    title: 'Https 通信过程',
+    subtitle: 'Https 通信过程',
     dateAndTime: '6月 7, 2022 • ☕️☕️☕️ 20 min read',
     href: 'https-handshake',
   },
   {
-    title: 'tcp 三次握手',
-    subtitle: 'tcp 三次握手',
+    title: 'Tcp 三次握手',
+    subtitle: 'Tcp 三次握手',
     dateAndTime: '6月 7, 2022 • ☕️☕️☕️ 10 min read',
     href: 'tcp-handshake',
   },
