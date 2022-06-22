@@ -1,5 +1,11 @@
 export default [
   {
+    title: '从零实现一个ssr应用',
+    subtitle: '基于 React18 和 Esbuild 实现的ssr应用',
+    dateAndTime: '6月 14, 2022 • ☕️☕️☕️ 20 min read',
+    href: 'create-ssr-project',
+  },
+  {
     title: '控制反转和依赖注入',
     subtitle: '控制反转和依赖注入',
     dateAndTime: '6月 14, 2022 • ☕️☕️☕️ 20 min read',
