@@ -1,6 +1,18 @@
 export default [
   {
-    title: '从零实现一个ssr应用',
+    title: 'React Suspense 解析',
+    subtitle: 'React Suspense 使用和原理解析',
+    dateAndTime: '6月 22, 2022 • ☕️☕️☕️ 20 min read',
+    href: 'react-suspense',
+  },
+  // {
+  //   title: 'React18 SSR 新特性',
+  //   subtitle: 'React18 SSR 新特性',
+  //   dateAndTime: '6月 22, 2022 • ☕️☕️☕️ 20 min read',
+  //   href: 'suspense-ssr',
+  // },
+  {
+    title: '从零实现一个 SSR 应用',
     subtitle: '基于 React18 和 Esbuild 实现的ssr应用',
     dateAndTime: '6月 14, 2022 • ☕️☕️☕️ 20 min read',
     href: 'create-ssr-project',
@@ -8,7 +20,7 @@ export default [
   {
     title: '控制反转和依赖注入',
     subtitle: '控制反转和依赖注入',
-    dateAndTime: '6月 14, 2022 • ☕️☕️☕️ 20 min read',
+    dateAndTime: '6月 14, 2022 • ☕️☕️☕️ 5 min read',
     href: 'ioc-di',
   },
   {
