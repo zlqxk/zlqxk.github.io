@@ -11,6 +11,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <title>BLOG ZHANG</title>
       </Head>
       <Layout>
+        {/* @ts-ignore */}
         <Component {...pageProps} />
       </Layout>
     </>

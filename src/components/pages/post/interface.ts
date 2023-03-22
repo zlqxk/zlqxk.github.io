@@ -3,8 +3,8 @@ export interface PostProps {
   pageInfo: {
     title: string
     subtitle: string
-    dateAndTime: string
-    href: string
+    dateAndTime?: string
+    href?: string
   }
 }
 

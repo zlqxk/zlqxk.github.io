@@ -9,9 +9,6 @@ const Footer: React.FC<FooterProps> = (props) => {
     <div className={cs(styles.footer, className)}>
       <div className={styles.footerInfo} style={style}>
         <a href='https://github.com/zlqxk/awesome-blog'>Github</a>
-        <a href='https://beian.miit.gov.cn' target='_blank' rel='noreferrer'>
-          浙ICP备2022010667号
-        </a>
       </div>
       <div className={styles.footerPvUv} id='busuanzi_container_site_pv'>
         <p>

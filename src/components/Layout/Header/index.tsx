@@ -8,7 +8,7 @@ const Header: React.FC<HeaderProps> = () => {
   return (
     <div className={styles.header}>
       <h1 className={styles.title}>
-        <Link href='https://www.alchemistmeta.com/'>BLOG ZHANG</Link>
+        <Link href='/'>BLOG ZHANG</Link>
       </h1>
       <Switch />
     </div>
