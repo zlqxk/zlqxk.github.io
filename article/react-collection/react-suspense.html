@@ -1,0 +1,210 @@
+<!DOCTYPE html><html><head><meta name="keywords" content="前端,react,babel,ts,typescript,学习记录"/><meta name="description" content="学习和分享工作生活中遇到的问题，记录前沿的技术，分享技术文章。"/><meta name="google-site-verification" content="s-VsAQCdV_MrjX9LC-rvr6SZ-MYSM4y1vVMJ9Fw7Oxo"/><meta name="viewport" content="width=device-width"/><meta charSet="utf-8"/><title>React Suspense 解析</title><meta name="description" content="React Suspense 使用和原理解析"/><meta name="next-head-count" content="4"/><link rel="preload" href="/_next/static/css/cf2d2167c5644ef0de3a.css" as="style"/><link rel="stylesheet" href="/_next/static/css/cf2d2167c5644ef0de3a.css" data-n-g=""/><link rel="preload" href="/_next/static/css/2c29b5f4059231122a7f.css" as="style"/><link rel="stylesheet" href="/_next/static/css/2c29b5f4059231122a7f.css" data-n-p=""/><noscript data-n-css=""></noscript><script defer="" nomodule="" src="/_next/static/chunks/polyfills-a40ef1678bae11e696dba45124eadd70.js"></script><script src="/_next/static/chunks/webpack-fb76148cfcfb42ca18eb.js" defer=""></script><script src="/_next/static/chunks/framework-895f067827ebe11ffe45.js" defer=""></script><script src="/_next/static/chunks/main-c4f2541b93e4ae8b71f8.js" defer=""></script><script src="/_next/static/chunks/pages/_app-472761f2aef6a4dd81fc.js" defer=""></script><script src="/_next/static/chunks/800-724b2f069f0c30072447.js" defer=""></script><script src="/_next/static/chunks/pages/article/react-collection/react-suspense-ac34c862ef30cb29657c.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_buildManifest.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_ssgManifest.js" defer=""></script></head><script async="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><body class="dark"><div id="__next"><div class="Layout_layout__1EnHR"><div class="Header_header__3Hw3A"><h1 class="Header_title__2jGsC"><a href="/">BLOG ZHANG</a></h1><div class="Switch_switch__11c0w"><div class="Switch_switchWarp__1Gqov"><div class="Switch_switchLeft__3OCuZ"> <img src="/moon.png" alt="" width="16" height="16"/></div><div class="Switch_switchRigth__1Wjdr"><img src="/sun.png" alt="" width="16" height="16"/></div></div><div class="Switch_switchCheck__1aiIo Switch_dark__2WQ89"></div></div></div><div class="ImgPreview_imgPreview__2OxIp"><img src=""/></div><article class="post_article__2Kkhj"><h1>React Suspense 解析</h1>
+<p>6 月 22, 2022 • ☕️☕️☕️ 20 min read</p>
+<p>现在我们代码中有「副作用」的行为例如异步请求，都是放在 useEffect 中处理的，而 <code>Suspense</code> 通常只是搭配 <code>React Lazy</code> 来实现代码分割。但是在未来，我们或许可以完全依赖 <code>Suspense</code>，而不再关心什么样的代码是有副作用的。</p>
+<h2>Suspense 如何使用</h2>
+<p>我们通过在组件里抛出一个 <code>Promise</code> 的异常，<code>Suspense</code> 会帮我们捕获到这个异常，然后显现 fallback 的内容，因为我们的组件永远都是在抛出 <code>Promise</code> 的异常，所以我们的页面会一直展示 loading...</p>
+<pre class="hljs"><code><span class="hljs-keyword">function</span> <span class="hljs-title function_">ProfilePage</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">return</span> (
+    <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">Suspense</span> <span class="hljs-attr">fallback</span>=<span class="hljs-string">{</span>&lt;<span class="hljs-attr">h1</span>&gt;</span>loading...<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>}&gt;
+      <span class="hljs-tag">&lt;<span class="hljs-name">ProfileDetails</span> /&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">Suspense</span>&gt;</span></span>
+  )
+}
+
+<span class="hljs-keyword">const</span> promise = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Promise</span>(<span class="hljs-function">() =&gt;</span> {})
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">ProfileDetails</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">throw</span> promise
+  <span class="hljs-keyword">return</span> <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>Hello World<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span></span>
+}
+</code></pre>
+<p><img src="/react-suspense/react-suspense_1.jpg" alt="react-suspense_1"></p>
+<p>我们声明一个 done 的变量，false 的时候抛出异常展示 fallback 的内容，等异步执行结束后设置为 true，这时候页面展示 Hello World。</p>
+<pre class="hljs"><code><span class="hljs-keyword">function</span> <span class="hljs-title function_">ProfilePage</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">return</span> (
+    <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">Suspense</span> <span class="hljs-attr">fallback</span>=<span class="hljs-string">{</span>&lt;<span class="hljs-attr">h1</span>&gt;</span>loading...<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>}&gt;
+      <span class="hljs-tag">&lt;<span class="hljs-name">ProfileDetails</span> /&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">Suspense</span>&gt;</span></span>
+  )
+}
+
+<span class="hljs-keyword">let</span> done = <span class="hljs-literal">false</span>
+
+<span class="hljs-keyword">const</span> promise = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve</span>) =&gt;</span> {
+  <span class="hljs-built_in">setTimeout</span>(<span class="hljs-function">() =&gt;</span> {
+    done = <span class="hljs-literal">true</span>
+    <span class="hljs-title function_">resolve</span>()
+  }, <span class="hljs-number">1000</span>)
+})
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">ProfileDetails</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">if</span> (!done) {
+    <span class="hljs-keyword">throw</span> promise
+  }
+  <span class="hljs-keyword">return</span> <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>Hello World<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span></span>
+}
+</code></pre>
+<p>通过这个思路，我们可以封装一个通用的函数，传入一个 <code>promise</code>，在 promise resolve 之前抛出异常，resolve 以后返回正常结果。</p>
+<pre class="hljs"><code><span class="hljs-keyword">function</span> <span class="hljs-title function_">wrapPromise</span>(<span class="hljs-params">promise</span>) {
+  <span class="hljs-keyword">let</span> status = <span class="hljs-string">&#x27;pending&#x27;</span>
+  <span class="hljs-keyword">let</span> result
+  <span class="hljs-keyword">let</span> suspender = promise.<span class="hljs-title function_">then</span>(
+    <span class="hljs-function">(<span class="hljs-params">r</span>) =&gt;</span> {
+      status = <span class="hljs-string">&#x27;success&#x27;</span>
+      result = r
+    },
+    <span class="hljs-function">(<span class="hljs-params">e</span>) =&gt;</span> {
+      status = <span class="hljs-string">&#x27;error&#x27;</span>
+      result = e
+    }
+  )
+  <span class="hljs-keyword">return</span> {
+    <span class="hljs-title function_">read</span>(<span class="hljs-params"></span>) {
+      <span class="hljs-keyword">if</span> (status === <span class="hljs-string">&#x27;pending&#x27;</span>) {
+        <span class="hljs-keyword">throw</span> suspender
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (status === <span class="hljs-string">&#x27;error&#x27;</span>) {
+        <span class="hljs-keyword">throw</span> result
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (status === <span class="hljs-string">&#x27;success&#x27;</span>) {
+        <span class="hljs-keyword">return</span> result
+      }
+    },
+  }
+}
+</code></pre>
+<p>这时我们就可以像写一个同步的代码一样来请求数据，在数据请求回来之前展示 <code>Suspense</code> 的 fallback 内容，数据请求回来以后展示正常的数据。</p>
+<pre class="hljs"><code><span class="hljs-keyword">function</span> <span class="hljs-title function_">fetchProfileData</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-comment">// fetchUser 是一个普通的异步请求</span>
+  <span class="hljs-keyword">let</span> userPromise = <span class="hljs-title function_">fetchUser</span>()
+  <span class="hljs-comment">// 使用 wrapPromise 包装</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-title function_">wrapPromise</span>(userPromise)
+}
+
+<span class="hljs-keyword">const</span> resource = <span class="hljs-title function_">fetchProfileData</span>()
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">ProfilePage</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">return</span> (
+    <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">Suspense</span> <span class="hljs-attr">fallback</span>=<span class="hljs-string">{</span>&lt;<span class="hljs-attr">h1</span>&gt;</span>loading...<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>}&gt;
+      <span class="hljs-tag">&lt;<span class="hljs-name">ProfileDetails</span> /&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">Suspense</span>&gt;</span></span>
+  )
+}
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">ProfileDetails</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;ProfileDetails render&#x27;</span>)
+  <span class="hljs-keyword">const</span> user = resource.<span class="hljs-title function_">read</span>()
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;user: &#x27;</span>, user)
+
+  <span class="hljs-keyword">return</span> <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>{user.name}<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span></span>
+}
+</code></pre>
+<p><img src="/react-suspense/react-suspense_2.gif" alt="react-suspense_2"></p>
+<h2>Suspense 原理</h2>
+<p>在知道了如何使用 <code>Suspense</code> 以后，我们不禁有两个疑问。</p>
+<ul>
+<li>react 是如何捕获到抛出的 Promise。</li>
+<li>react 是如何在 Promise 执行完成以后重新展示正确的内容。</li>
+</ul>
+<p>我们可以通过一段简单的代码来解释上述两个问题，可以看到我们通过 try... catch... 来捕获异常，然后在 catch 的逻辑中执行这个 promise，在回调中重新执行 render 方法，这时候 done 已经变成 true，就可以正常执行 render 了。</p>
+<pre class="hljs"><code><span class="hljs-keyword">let</span> done = <span class="hljs-literal">false</span>
+
+<span class="hljs-keyword">const</span> promise = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve</span>) =&gt;</span> {
+  <span class="hljs-built_in">setTimeout</span>(<span class="hljs-function">() =&gt;</span> {
+    done = <span class="hljs-literal">true</span>
+    <span class="hljs-title function_">resolve</span>()
+  }, <span class="hljs-number">1000</span>)
+})
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">render</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-keyword">if</span> (!done) {
+      <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;loading...&#x27;</span>)
+      <span class="hljs-keyword">throw</span> promise
+    }
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;render done&#x27;</span>)
+  } <span class="hljs-keyword">catch</span> (error) {
+    promise.<span class="hljs-title function_">then</span>(<span class="hljs-function">(<span class="hljs-params">res</span>) =&gt;</span> <span class="hljs-title function_">render</span>())
+  }
+}
+
+<span class="hljs-title function_">render</span>()
+</code></pre>
+<p>同样的，react 也使用了一样的思路，让我们先看一下 react 执行的大体流程，然后再逐步看下具体实现。</p>
+<p><img src="/react-suspense/react-suspense_3.jpg" alt="react-suspense_3"></p>
+<h3>1. 捕获异常</h3>
+<p>在组件 render 的过程使用 try... catch... 捕获 render 阶段抛出的异常。</p>
+<pre class="hljs"><code><span class="hljs-keyword">do</span> {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-comment">// 组件 render 流程</span>
+    <span class="hljs-title function_">workLoopSync</span>()
+    <span class="hljs-keyword">break</span>
+  } <span class="hljs-keyword">catch</span> (thrownValue) {
+    <span class="hljs-title function_">handleError</span>(root, thrownValue)
+  }
+} <span class="hljs-keyword">while</span> (<span class="hljs-literal">true</span>)
+</code></pre>
+<p>在渲染的过程中第一次遇到 <code>Suspense</code> 组件会正常渲染其子孙结点。</p>
+<pre class="hljs"><code><span class="hljs-comment">// showFallback 为 false</span>
+<span class="hljs-keyword">if</span> (showFallback) {
+  <span class="hljs-comment">// 渲染fallback</span>
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-keyword">return</span> <span class="hljs-title function_">mountSuspensePrimaryChildren</span>(workInProgress, nextPrimaryChildren, renderLanes)
+}
+</code></pre>
+<p>在 render 到子组件时 try... catch... 捕获到抛出的异常，通过判断捕获的异常有没有 then 方法来判断是否进入 <code>Suspense</code> 的逻辑，</p>
+<pre class="hljs"><code><span class="hljs-keyword">if</span> (value !== <span class="hljs-literal">null</span> &amp;&amp; <span class="hljs-keyword">typeof</span> value === <span class="hljs-string">&#x27;object&#x27;</span> &amp;&amp; <span class="hljs-keyword">typeof</span> value.<span class="hljs-property">then</span> === <span class="hljs-string">&#x27;function&#x27;</span>) {
+  <span class="hljs-comment">// 是否需要 Suspense 接管</span>
+}
+</code></pre>
+<h3>2. 处理 Suspense 组件</h3>
+<p>如果是需要 <code>Suspense</code> 接管，则会依次执行以下三步：</p>
+<ol>
+<li>查找抛出异常组件最近的 <code>Suspense</code>。</li>
+<li>对 <code>Suspense</code> 做标记，再次 render 则展示 fallback 的内容。</li>
+<li>将捕获的 Promise 挂载到 <code>Suspense</code> 上。</li>
+</ol>
+<pre class="hljs"><code><span class="hljs-comment">// 查找当前抛出异常的组件最近的 Suspense</span>
+<span class="hljs-keyword">const</span> suspenseBoundary = <span class="hljs-title function_">getNearestSuspenseBoundaryToCapture</span>(returnFiber)
+
+<span class="hljs-comment">// 给查找到的Suspense做一个标记</span>
+<span class="hljs-title function_">markSuspenseBoundaryShouldCapture</span>(suspenseBoundary, returnFiber, sourceFiber, root, rootRenderLanes)
+
+<span class="hljs-comment">// 将捕获的异常挂载到Suspense的updateQueue上</span>
+<span class="hljs-title function_">attachRetryListener</span>(suspenseBoundary, root, wakeable, rootRenderLanes)
+</code></pre>
+<p>在执行完上述三步以后会重新执行一遍 render。</p>
+<pre class="hljs"><code><span class="hljs-title function_">completeUnitOfWork</span>(erroredWork)
+</code></pre>
+<h3>3. 展示 fallback</h3>
+<p>在执行第二次 render 的时候由于 <code>Suspense</code> 已经被打标记，说明已经捕获到错误了，此时展示 fallback 的内容，因为不再渲染有异常的子组件，所以 render 可以继续向下执行。</p>
+<pre class="hljs"><code><span class="hljs-comment">// showFallback 为 true</span>
+<span class="hljs-keyword">if</span> (showFallback) {
+  <span class="hljs-keyword">const</span> fallbackFragment = <span class="hljs-title function_">mountSuspenseFallbackChildren</span>(
+    workInProgress,
+    nextPrimaryChildren,
+    nextFallbackChildren,
+    renderLanes
+  )
+
+  <span class="hljs-keyword">return</span> fallbackFragment
+}
+</code></pre>
+<h3>4. 执行 promise</h3>
+<p>在最后的 <code>commit</code> 阶段，执行在 <code>Suspense</code> 挂载的 promise。</p>
+<pre class="hljs"><code><span class="hljs-keyword">function</span> <span class="hljs-title function_">attachSuspenseRetryListeners</span>(<span class="hljs-params">finishedWork: Fiber</span>) {
+  <span class="hljs-keyword">const</span> <span class="hljs-attr">wakeables</span>: <span class="hljs-title class_">Set</span>&lt;<span class="hljs-title class_">Wakeable</span>&gt; | <span class="hljs-literal">null</span> = (finishedWork.<span class="hljs-property">updateQueue</span>: <span class="hljs-built_in">any</span>);
+  <span class="hljs-keyword">if</span> (wakeables !== <span class="hljs-literal">null</span>) {
+    wakeables.<span class="hljs-title function_">forEach</span>(<span class="hljs-function"><span class="hljs-params">wakeable</span> =&gt;</span> {
+      <span class="hljs-keyword">const</span> retry = resolveRetryWakeable.<span class="hljs-title function_">bind</span>(<span class="hljs-literal">null</span>, finishedWork, wakeable);
+      <span class="hljs-keyword">if</span> (!retryCache.<span class="hljs-title function_">has</span>(wakeable)) {
+        <span class="hljs-comment">// 关键代码</span>
+        wakeable.<span class="hljs-title function_">then</span>(retry, retry);
+      }
+    });
+  }
+}
+</code></pre>
+<h3>5. 重新 render</h3>
+<p>最后当 promise resolve 结束后会重新 render <code>Suspense</code> 的子孙组件，这时数据请求已经完成，子孙组件不再抛出异常，页面正常渲染有数据的结果。</p>
+<h2>总结</h2>
+<p><code>Suspense</code> 是 React 一个非常重要的特性，<code>Suspense</code> 的存在或许会改变我们未来数据请求的方式。</p>
+</article><div class="Footer_footer__316w0"><div class="Footer_footerInfo__Oa_Q4"><a href="https://github.com/zlqxk/awesome-blog">Github</a></div><div class="Footer_footerPvUv__YWOzD" id="busuanzi_container_site_pv"><p>本站总访问量<span id="busuanzi_value_site_pv"></span>次</p><p>访客数<span id="busuanzi_value_site_uv"></span>人次</p></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{}},"page":"/article/react-collection/react-suspense","query":{},"buildId":"E-yMlcZOffAX6cd0TJKvF","nextExport":true,"autoExport":true,"isFallback":false,"scriptLoader":[]}</script></body></html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html><html><head><meta name="keywords" content="前端,react,babel,ts,typescript,学习记录"/><meta name="description" content="学习和分享工作生活中遇到的问题，记录前沿的技术，分享技术文章。"/><meta name="google-site-verification" content="s-VsAQCdV_MrjX9LC-rvr6SZ-MYSM4y1vVMJ9Fw7Oxo"/><meta name="viewport" content="width=device-width"/><meta charSet="utf-8"/><title>从零实现一个 SSR 应用</title><meta name="description" content="基于 React18 和 Esbuild 实现的ssr应用"/><meta name="next-head-count" content="4"/><link rel="preload" href="/_next/static/css/cf2d2167c5644ef0de3a.css" as="style"/><link rel="stylesheet" href="/_next/static/css/cf2d2167c5644ef0de3a.css" data-n-g=""/><link rel="preload" href="/_next/static/css/2c29b5f4059231122a7f.css" as="style"/><link rel="stylesheet" href="/_next/static/css/2c29b5f4059231122a7f.css" data-n-p=""/><noscript data-n-css=""></noscript><script defer="" nomodule="" src="/_next/static/chunks/polyfills-a40ef1678bae11e696dba45124eadd70.js"></script><script src="/_next/static/chunks/webpack-fb76148cfcfb42ca18eb.js" defer=""></script><script src="/_next/static/chunks/framework-895f067827ebe11ffe45.js" defer=""></script><script src="/_next/static/chunks/main-c4f2541b93e4ae8b71f8.js" defer=""></script><script src="/_next/static/chunks/pages/_app-472761f2aef6a4dd81fc.js" defer=""></script><script src="/_next/static/chunks/800-724b2f069f0c30072447.js" defer=""></script><script src="/_next/static/chunks/pages/article/react-collection/create-ssr-project-466c564407d39bf14024.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_buildManifest.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_ssgManifest.js" defer=""></script></head><script async="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><body class="dark"><div id="__next"><div class="Layout_layout__1EnHR"><div class="Header_header__3Hw3A"><h1 class="Header_title__2jGsC"><a href="/">BLOG ZHANG</a></h1><div class="Switch_switch__11c0w"><div class="Switch_switchWarp__1Gqov"><div class="Switch_switchLeft__3OCuZ"> <img src="/moon.png" alt="" width="16" height="16"/></div><div class="Switch_switchRigth__1Wjdr"><img src="/sun.png" alt="" width="16" height="16"/></div></div><div class="Switch_switchCheck__1aiIo Switch_dark__2WQ89"></div></div></div><div class="ImgPreview_imgPreview__2OxIp"><img src=""/></div><article class="post_article__2Kkhj"><h1>从零实现一个 ssr 应用</h1>
+<p>6 月 7, 2022 • ☕️☕️☕️ 10 min read</p>
+<p>本文将基于 <code>React18</code> 和 <code>Esbuild</code> 来构建一个支持流式 <code>ssr</code> 的应用，本文只记录大体思路，具体代码查看<a href="https://github.com/zlqxk/react-ssr">仓库</a>。首先我们看下目录结构：</p>
+<pre class="hljs"><code>├── client
+│   ├── _app.<span class="hljs-property">tsx</span> <span class="hljs-comment">// 所有路由的入口</span>
+│   ├── _document.<span class="hljs-property">tsx</span> <span class="hljs-comment">// HTML结构</span>
+│   ├── index.<span class="hljs-property">tsx</span> <span class="hljs-comment">// 客户端 Hydrate 的入口</span>
+│   └── pages <span class="hljs-comment">// 页面</span>
+│       └── index.<span class="hljs-property">tsx</span>
+├── config
+│   └── build.<span class="hljs-property">js</span> <span class="hljs-comment">// 构建服务</span>
+├── dist <span class="hljs-comment">// 构建产物</span>
+│   ├── server <span class="hljs-comment">// server 端的构建产物</span>
+│   │   └── index.<span class="hljs-property">js</span>
+│   └── <span class="hljs-keyword">static</span> <span class="hljs-comment">// client 端的构建产物</span>
+│       └── index.<span class="hljs-property">js</span>
+├── package.<span class="hljs-property">json</span>
+├── server
+│   ├── index.<span class="hljs-property">ts</span> <span class="hljs-comment">// server 端入口</span>
+│   └── renderToPipe.<span class="hljs-property">tsx</span> <span class="hljs-comment">// React 组件渲染为 HTML</span>
+├── router <span class="hljs-comment">// 路由相关</span>
+│   ├── config.<span class="hljs-property">ts</span> <span class="hljs-comment">// 路由表</span>
+│   ├── <span class="hljs-keyword">interface</span>.<span class="hljs-property">ts</span>
+│   └── <span class="hljs-title class_">Router</span>.<span class="hljs-property">tsx</span> <span class="hljs-comment">// 路由组件</span>
+├── tsconfig.<span class="hljs-property">json</span>
+└── yarn.<span class="hljs-property">lock</span>
+</code></pre>
+<h2>1、构建能力</h2>
+<p>首先我们需要一个打包服务，对 client 端和 server 端的代码分别进行打包。一个 node 服务通常不需要打包也可以运行，但是在 <code>ssr</code> 应用里，node 服务也需要编译 JSX，所以这里需要对 server 端也引入一次构建工作。我们将 client 端的代码直接打包成浏览器可以执行的 IIFE 格式，server 端打包成 cjs 的即可。</p>
+<p><a href="https://github.com/zlqxk/react-ssr/blob/master/config/build.js#L7-L45">详细代码</a></p>
+<h2>2、创建 server 端</h2>
+<p>我们使用 express 创建一个简单的 node 服务，接受请求后 通过 <code>React18</code> 提供的 renderToPipeableStream API 来实现以流的形式传递，后面我们也将在 dome 里体验一下流式 SSR 的新特性。</p>
+<pre class="hljs"><code><span class="hljs-comment">// server/renderToPipe.tsx</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">renderToPipe</span>(<span class="hljs-params">res: ServerResponse</span>) {
+  <span class="hljs-keyword">const</span> stream = <span class="hljs-title function_">renderToPipeableStream</span>(
+    <span class="hljs-comment">// Document 为自定义的HTML结构</span>
+    <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">Document</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">App</span> /&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">Document</span>&gt;</span></span>
+  )
+}
+</code></pre>
+<p><a href="https://github.com/zlqxk/react-ssr/blob/master/server/renderToPipe.tsx#L17">详细代码</a></p>
+<h2>3、创建 client 端</h2>
+<p>server 端直出的 HTML 没有绑定事件和其他 csr 阶段执行的代码，所以我们需要通过 hydrate 实现这部分能力。</p>
+<pre class="hljs"><code><span class="hljs-comment">// client/index.tsx</span>
+<span class="hljs-title function_">hydrateRoot</span>(<span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&#x27;__root&#x27;</span>)!, <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">App</span> /&gt;</span></span>)
+</code></pre>
+<p><a href="https://github.com/zlqxk/react-ssr/blob/master/client/index.tsx#L1-L5">详细代码</a></p>
+<p>经过以上工作我们就可以通过 <code>ssr</code> 渲染一个 React 组件了。</p>
+<p><img src="/create-ssr-project/ssr_1.gif" alt="ssr_1"></p>
+<h2>4、路由</h2>
+<p>路由的基本思路就是根据页面的 path 渲染对应的组件，不过 <code>ssr</code> 应用路由特殊的地方是要区分前端路由和服务端路由。直接访问路径命中服务端路由返回页面，前端路由跳转由前端接管，不再向服务端发起请求。</p>
+<p>在实现路由之前，我们要实现一个数据注水的能力，思考一下，我们在服务端拿到的数据，如何传递给客户端？一个很简单的方式就是将这部分数据挂载到 window 上，然后在 hydrate 的时候透传到组件内部。这里就要将请求的 path 挂载到 window 上，这样我们就可以在 <code>ssr</code> 和 csr 阶段都能拿到当前的 path 了。</p>
+<pre class="hljs"><code><span class="hljs-comment">// server/renderToPipe.tsx</span>
+<span class="hljs-keyword">const</span> stream = <span class="hljs-title function_">renderToPipeableStream</span>({
+  <span class="hljs-comment">// 将 pathname 挂载到 window</span>
+  <span class="hljs-attr">bootstrapScriptContent</span>: <span class="hljs-string">`window.__DATA__=<span class="hljs-subst">${<span class="hljs-built_in">JSON</span>.stringify(__DATA__)}</span>`</span>,
+})
+</code></pre>
+<p><a href="https://github.com/zlqxk/react-ssr/blob/master/server/renderToPipe.tsx#L23">详细代码</a></p>
+<pre class="hljs"><code><span class="hljs-comment">// client/index.tsx</span>
+<span class="hljs-comment">// 将 window 上挂载的数据透传到组件内部</span>
+<span class="hljs-title function_">hydrateRoot</span>(<span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&#x27;__root&#x27;</span>)!, <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">App</span> <span class="hljs-attr">__DATA__</span>=<span class="hljs-string">{window.__DATA__}</span> /&gt;</span></span>)
+</code></pre>
+<p><a href="https://github.com/zlqxk/react-ssr/blob/master/client/index.tsx#L5">详细代码</a></p>
+<p>能拿到 pathname 以后，我们就可以通过 pathname 映射对应的组件来进行渲染。</p>
+<pre class="hljs"><code><span class="hljs-comment">// router/Route.tsx</span>
+<span class="hljs-keyword">const</span> <span class="hljs-title class_">Component</span> = config.<span class="hljs-title function_">find</span>(<span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> item.<span class="hljs-property">path</span> === pathname)?.<span class="hljs-property">Component</span>!
+<span class="hljs-keyword">return</span> <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">Component</span> /&gt;</span></span>
+</code></pre>
+<p><a href="https://github.com/zlqxk/react-ssr/blob/master/router/Route.tsx#L11">详细代码</a></p>
+<p>到这里我们就已经实现了服务端路由，通过直接访问对应的路径就可以渲染对应的页面。接下来我们来实现一下前端路由，前端路由的思路的核心就是通过 history.pushState 这个 API 来实现页面在不刷新的情况下修改页面路径，然后通过监听 popstate 来监听浏览器前进和后退事件。</p>
+<pre class="hljs"><code><span class="hljs-comment">// router/Route.tsx</span>
+<span class="hljs-comment">// 监听浏览器前进后退事件来渲染对应的页面</span>
+<span class="hljs-variable language_">window</span>.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">&#x27;popstate&#x27;</span>, handlePopState)
+<span class="hljs-keyword">const</span> handlePopState = <span class="hljs-keyword">async</span> () =&gt; {
+  <span class="hljs-comment">// 切换页面组件</span>
+  <span class="hljs-title function_">changePath</span>()
+}
+
+<span class="hljs-comment">// 提供一个手动触发路由跳转的方法，使用 Provider 透传，组件通过 useRouter 获取 push 方法</span>
+<span class="hljs-keyword">const</span> push = <span class="hljs-keyword">async</span> (<span class="hljs-attr">path</span>: <span class="hljs-built_in">string</span>) =&gt; {
+  <span class="hljs-comment">// 切换页面组件</span>
+  <span class="hljs-title function_">changePath</span>()
+  <span class="hljs-comment">// 修改页面path</span>
+  history.<span class="hljs-title function_">pushState</span>({}, <span class="hljs-string">&#x27;&#x27;</span>, path)
+}
+</code></pre>
+<p><a href="https://github.com/zlqxk/react-ssr/blob/master/router/Route.tsx#L13-L32">详细代码</a></p>
+<p>到这里，我们已经实现了一个支持服务端路由和前端路由的路由系统了，在组件里可以通过 router.push 方法来进行前端路由的跳转。</p>
+<pre class="hljs"><code><span class="hljs-comment">// client/pages/index.tsx</span>
+<span class="hljs-keyword">const</span> router = <span class="hljs-title function_">useRouter</span>()
+
+<span class="hljs-keyword">return</span> <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">onClick</span>=<span class="hljs-string">{()</span> =&gt;</span> router.push?.(&#x27;/list&#x27;)}&gt;跳转<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span></span>
+</code></pre>
+<p><a href="https://github.com/zlqxk/react-ssr/blob/master/client/pages/index.tsx#L16">详细代码</a></p>
+<p>效果如下动图所示：</p>
+<p><img src="/create-ssr-project/ssr_2.gif" alt="ssr_2"></p>
+<h2>5、数据请求</h2>
+<p>数据请求我们可以参考 next.js，暴露一个 <code>getServerSideProps</code> 方法，在该方法中调用请求的方法，然后将返回值注入到页面的 props 中。和路由相似，数据请求的方式与页面访问的方式相关，如果通过服务端路由的形式访问，<code>getServerSideProps</code> 在请求的时候运行，这个页面会和返回的 props 一起渲染。当您在客户端页面通过前端路由请求此页面时，会向服务器发送 API 请求，服务器运行 <code>getServerSideProps</code> 将返回的结果通过 json 的形式返回。</p>
+<p>处理服务端路由访问，如果当前页面有 <code>getServerSideProps</code> 方法，则调用该方法请求数据</p>
+<pre class="hljs"><code><span class="hljs-comment">// server/renderToPipe.tsx</span>
+<span class="hljs-keyword">const</span> pageProps = <span class="hljs-keyword">await</span> getServerSideProps?.({ req, res })
+<span class="hljs-keyword">const</span> __DATA__ = { pathname, pageProps }
+<span class="hljs-keyword">const</span> stream = <span class="hljs-title function_">renderToPipeableStream</span>(
+  <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">Document</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">App</span> <span class="hljs-attr">__DATA__</span>=<span class="hljs-string">{__DATA__}</span> /&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">Document</span>&gt;</span></span>,
+  {
+    <span class="hljs-attr">bootstrapScripts</span>: [<span class="hljs-string">&#x27;/index.js&#x27;</span>],
+    <span class="hljs-attr">bootstrapScriptContent</span>: <span class="hljs-string">`window.__DATA__=<span class="hljs-subst">${<span class="hljs-built_in">JSON</span>.stringify(__DATA__)}</span>`</span>,
+  }
+)
+</code></pre>
+<p><a href="https://github.com/zlqxk/react-ssr/blob/master/server/renderToPipe.tsx#L15">详细代码</a></p>
+<p>处理前端路由访问，如果页面有 <code>getServerSideProps</code> 方法，监听一个 /_ssr${item.path}.json 的路由用来返回数据请求的返回。</p>
+<pre class="hljs"><code><span class="hljs-comment">// server/index.ts</span>
+<span class="hljs-keyword">if</span> (item.<span class="hljs-property">getServerSideProps</span>) {
+  app.<span class="hljs-title function_">get</span>(<span class="hljs-string">`/_ssr<span class="hljs-subst">${item.path}</span>.json`</span>, <span class="hljs-keyword">async</span> (req, res) =&gt; {
+    <span class="hljs-keyword">const</span> data = <span class="hljs-keyword">await</span> item.<span class="hljs-property">getServerSideProps</span>?.({ req, res })
+    res.<span class="hljs-title function_">setHeader</span>(<span class="hljs-string">&#x27;Content-type&#x27;</span>, <span class="hljs-string">&#x27;application/json&#x27;</span>)
+    res.<span class="hljs-title function_">send</span>(data)
+  })
+}
+</code></pre>
+<p><a href="https://github.com/zlqxk/react-ssr/blob/master/server/index.ts#L13-L16">详细代码</a></p>
+<p>然后在前端路由切换的方法里请求这个路径，拿到返回值后再进行页面渲染。</p>
+<pre class="hljs"><code><span class="hljs-keyword">const</span> changePath = <span class="hljs-keyword">async</span> (<span class="hljs-attr">path</span>: <span class="hljs-built_in">string</span>) =&gt; {
+  <span class="hljs-comment">// 获取切换后的页面的 getServerSideProps</span>
+  <span class="hljs-keyword">const</span> { getServerSideProps } = config.<span class="hljs-title function_">find</span>(<span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> item.<span class="hljs-property">path</span> === path) ?? {}
+  <span class="hljs-keyword">if</span> (getServerSideProps) {
+    <span class="hljs-keyword">const</span> pageProps = <span class="hljs-keyword">await</span> (<span class="hljs-keyword">await</span> <span class="hljs-title function_">fetch</span>(<span class="hljs-string">`/_ssr<span class="hljs-subst">${path}</span>.json`</span>)).<span class="hljs-title function_">json</span>()
+    <span class="hljs-title function_">setPagePropsState</span>(pageProps)
+  }
+}
+</code></pre>
+<p><a href="https://github.com/zlqxk/react-ssr/blob/master/router/Route.tsx#L41-L45">详细代码</a></p>
+<p>完成了以上工作后，我们就可以通过 <code>getServerSideProps</code> 来获取页面数据了，这里我们 mock 一个数据请求，请求的时间是 1000ms。</p>
+<pre class="hljs"><code><span class="hljs-keyword">const</span> <span class="hljs-title class_">List</span>: <span class="hljs-variable constant_">FC</span>&lt;<span class="hljs-title class_">ListProps</span>&gt; = <span class="hljs-function">(<span class="hljs-params">props</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> { list } = props
+  <span class="hljs-keyword">return</span> (
+    <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
+      {list.map((item, index) =&gt; (
+        <span class="hljs-tag">&lt;<span class="hljs-name">p</span> <span class="hljs-attr">key</span>=<span class="hljs-string">{index}</span>&gt;</span>{item}<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+      ))}
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span>
+  )
+}
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-attr">getServerSideProps</span>: <span class="hljs-title class_">GetServerSidePropsType</span>&lt;<span class="hljs-title class_">ListProps</span>&gt; = <span class="hljs-keyword">async</span> () =&gt; {
+  <span class="hljs-keyword">const</span> list = <span class="hljs-keyword">await</span> <span class="hljs-title function_">getList</span>()
+  <span class="hljs-keyword">return</span> {
+    list,
+  }
+}
+</code></pre>
+<p>到这里我们基本上就实现了一个 <code>ssr</code> 应用所需的大部分功能了。</p>
+<p><img src="/create-ssr-project/ssr_3.gif" alt="ssr_3"></p>
+</article><div class="Footer_footer__316w0"><div class="Footer_footerInfo__Oa_Q4"><a href="https://github.com/zlqxk/awesome-blog">Github</a></div><div class="Footer_footerPvUv__YWOzD" id="busuanzi_container_site_pv"><p>本站总访问量<span id="busuanzi_value_site_pv"></span>次</p><p>访客数<span id="busuanzi_value_site_uv"></span>人次</p></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{}},"page":"/article/react-collection/create-ssr-project","query":{},"buildId":"E-yMlcZOffAX6cd0TJKvF","nextExport":true,"autoExport":true,"isFallback":false,"scriptLoader":[]}</script></body></html>

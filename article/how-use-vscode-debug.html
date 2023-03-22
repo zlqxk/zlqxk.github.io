@@ -1,0 +1,20 @@
+<!DOCTYPE html><html><head><meta name="keywords" content="前端,react,babel,ts,typescript,学习记录"/><meta name="description" content="学习和分享工作生活中遇到的问题，记录前沿的技术，分享技术文章。"/><meta name="google-site-verification" content="s-VsAQCdV_MrjX9LC-rvr6SZ-MYSM4y1vVMJ9Fw7Oxo"/><meta name="viewport" content="width=device-width"/><meta charSet="utf-8"/><title>如何使用 vscode 中的 debug 功能</title><meta name="description" content="如何使用 vscode 中的 debug 功能"/><meta name="next-head-count" content="4"/><link rel="preload" href="/_next/static/css/cf2d2167c5644ef0de3a.css" as="style"/><link rel="stylesheet" href="/_next/static/css/cf2d2167c5644ef0de3a.css" data-n-g=""/><link rel="preload" href="/_next/static/css/2c29b5f4059231122a7f.css" as="style"/><link rel="stylesheet" href="/_next/static/css/2c29b5f4059231122a7f.css" data-n-p=""/><noscript data-n-css=""></noscript><script defer="" nomodule="" src="/_next/static/chunks/polyfills-a40ef1678bae11e696dba45124eadd70.js"></script><script src="/_next/static/chunks/webpack-fb76148cfcfb42ca18eb.js" defer=""></script><script src="/_next/static/chunks/framework-895f067827ebe11ffe45.js" defer=""></script><script src="/_next/static/chunks/main-c4f2541b93e4ae8b71f8.js" defer=""></script><script src="/_next/static/chunks/pages/_app-472761f2aef6a4dd81fc.js" defer=""></script><script src="/_next/static/chunks/800-724b2f069f0c30072447.js" defer=""></script><script src="/_next/static/chunks/pages/article/how-use-vscode-debug-3605f69e577534a98c0a.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_buildManifest.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_ssgManifest.js" defer=""></script></head><script async="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><body class="dark"><div id="__next"><div class="Layout_layout__1EnHR"><div class="Header_header__3Hw3A"><h1 class="Header_title__2jGsC"><a href="/">BLOG ZHANG</a></h1><div class="Switch_switch__11c0w"><div class="Switch_switchWarp__1Gqov"><div class="Switch_switchLeft__3OCuZ"> <img src="/moon.png" alt="" width="16" height="16"/></div><div class="Switch_switchRigth__1Wjdr"><img src="/sun.png" alt="" width="16" height="16"/></div></div><div class="Switch_switchCheck__1aiIo Switch_dark__2WQ89"></div></div></div><div class="ImgPreview_imgPreview__2OxIp"><img src=""/></div><article class="post_article__2Kkhj"><h1>如何使用 vscode 中的 debug 功能</h1>
+<p>4 月 14, 2022 • ☕️☕️☕️ 10 min read</p>
+<p>断点调试能够帮助我们很清晰的了解整个代码的执行流程，例如我们在阅读 react 源码的过程中，一边断点一边阅读会使整个 react 执行流程更加清晰，在上文我们已经搭建了一个 react 源码的调试环境，接下来我们来看一下如果进行断点调试。</p>
+<h2>启动项目</h2>
+<p>这步不用多说，将我们搭建好的 react 调试项目跑起来。</p>
+<h2>开启 debug</h2>
+<p>在 vscode 左侧找到 debug 的开关，点击运行和调试，选择要调试的环境，这里我们选择 chrome。</p>
+<p><img src="/how-use-vscode-debug/debug-position.png" alt="debug-position"></p>
+<h2>设置要调试的端口号</h2>
+<p>在选择了 chrome 以后，会自动在我们根目录下生成一个 launch.json 文件，这个文件存储这 debug 用到的配置，这里我们将 url 改成我们调试项目的端口号。</p>
+<p><img src="/how-use-vscode-debug/debug-url.png" alt="debug-url"></p>
+<p>到这里我们就已经设置好了，让我们回到上一步，重新点击运行和调试，接下来就会自动打开一个 chrome 页面，如果成功打开就说明我们的配置已经没有问题了。</p>
+<h2>开始断点调试</h2>
+<p>现在我们就可以在入口的地方打上一个断点，点下刷新按钮，这时候代码的执行就会被断点停住，然后我就可以通过点击下一步来一步步调试 react 源码了。</p>
+<p><img src="/how-use-vscode-debug/debug-use.png" alt="debug-use"></p>
+<h2>debug 信息</h2>
+<p>在左侧我们就可以看到当前执行的上下文对象的变量，包括当前的调用堆栈，通过点击调用堆栈里的函数，可以很容易的查看每一步执行的函数，避免了在海量的代码里找来找去。</p>
+<p><img src="/how-use-vscode-debug/debug-info.png" alt="debug-info"></p>
+<p>在有了调试环境和 debug 的加持，我们就可以相对轻松的阅读 react 的源码了，下文我们将介绍一下 react 的主要执行流程。</p>
+</article><div class="Footer_footer__316w0"><div class="Footer_footerInfo__Oa_Q4"><a href="https://github.com/zlqxk/awesome-blog">Github</a></div><div class="Footer_footerPvUv__YWOzD" id="busuanzi_container_site_pv"><p>本站总访问量<span id="busuanzi_value_site_pv"></span>次</p><p>访客数<span id="busuanzi_value_site_uv"></span>人次</p></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{}},"page":"/article/how-use-vscode-debug","query":{},"buildId":"E-yMlcZOffAX6cd0TJKvF","nextExport":true,"autoExport":true,"isFallback":false,"scriptLoader":[]}</script></body></html>

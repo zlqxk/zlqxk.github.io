@@ -1,0 +1,27 @@
+<!DOCTYPE html><html><head><meta name="keywords" content="前端,react,babel,ts,typescript,学习记录"/><meta name="description" content="学习和分享工作生活中遇到的问题，记录前沿的技术，分享技术文章。"/><meta name="google-site-verification" content="s-VsAQCdV_MrjX9LC-rvr6SZ-MYSM4y1vVMJ9Fw7Oxo"/><meta name="viewport" content="width=device-width"/><meta charSet="utf-8"/><title>控制反转和依赖注入</title><meta name="description" content="控制反转和依赖注入"/><meta name="next-head-count" content="4"/><link rel="preload" href="/_next/static/css/cf2d2167c5644ef0de3a.css" as="style"/><link rel="stylesheet" href="/_next/static/css/cf2d2167c5644ef0de3a.css" data-n-g=""/><link rel="preload" href="/_next/static/css/2c29b5f4059231122a7f.css" as="style"/><link rel="stylesheet" href="/_next/static/css/2c29b5f4059231122a7f.css" data-n-p=""/><noscript data-n-css=""></noscript><script defer="" nomodule="" src="/_next/static/chunks/polyfills-a40ef1678bae11e696dba45124eadd70.js"></script><script src="/_next/static/chunks/webpack-fb76148cfcfb42ca18eb.js" defer=""></script><script src="/_next/static/chunks/framework-895f067827ebe11ffe45.js" defer=""></script><script src="/_next/static/chunks/main-c4f2541b93e4ae8b71f8.js" defer=""></script><script src="/_next/static/chunks/pages/_app-472761f2aef6a4dd81fc.js" defer=""></script><script src="/_next/static/chunks/800-724b2f069f0c30072447.js" defer=""></script><script src="/_next/static/chunks/pages/article/ioc-di-c8d31f6e863fdf00b638.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_buildManifest.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_ssgManifest.js" defer=""></script></head><script async="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><body class="dark"><div id="__next"><div class="Layout_layout__1EnHR"><div class="Header_header__3Hw3A"><h1 class="Header_title__2jGsC"><a href="/">BLOG ZHANG</a></h1><div class="Switch_switch__11c0w"><div class="Switch_switchWarp__1Gqov"><div class="Switch_switchLeft__3OCuZ"> <img src="/moon.png" alt="" width="16" height="16"/></div><div class="Switch_switchRigth__1Wjdr"><img src="/sun.png" alt="" width="16" height="16"/></div></div><div class="Switch_switchCheck__1aiIo Switch_dark__2WQ89"></div></div></div><div class="ImgPreview_imgPreview__2OxIp"><img src=""/></div><article class="post_article__2Kkhj"><h1>控制反转和依赖注入</h1>
+<p>6 月 15, 2022 • ☕️☕️☕️ 5 min read</p>
+<h2>控制反转</h2>
+<p>控制反转是一种设计思想，可以用来降低代码之间的耦合度，例如我们在 Class A 中用到了 Class B 的对象 b，一般情况下，需要在 A 的代码中显式地用 new 建立 B 的对象。</p>
+<pre class="hljs"><code><span class="hljs-keyword">class</span> <span class="hljs-title class_">Person</span> {}
+
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">Boy</span> {
+  <span class="hljs-attr">person</span>: <span class="hljs-title class_">Person</span>
+
+  <span class="hljs-title function_">constructor</span>(<span class="hljs-params"></span>) {
+    <span class="hljs-comment">// 显式实例化</span>
+    <span class="hljs-variable language_">this</span>.<span class="hljs-property">person</span> = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Person</span>()
+  }
+}
+</code></pre>
+<p>采用依赖注入技术之后，A 的代码只需要定义一个 private 的 B 对象，不需要直接 new 来获得这个对象，而是通过相关的容器控制程序来将 B 对象在外部 new 出来并注入到 A 类里的引用中。</p>
+<pre class="hljs"><code><span class="hljs-keyword">class</span> <span class="hljs-title class_">Person</span> {}
+
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">Boy</span> {
+  <span class="hljs-attr">person</span>: <span class="hljs-title class_">Person</span>
+
+  <span class="hljs-title function_">constructor</span>(<span class="hljs-params"><span class="hljs-keyword">private</span> <span class="hljs-keyword">readonly</span> person: Person</span>) {}
+}
+</code></pre>
+<h2>依赖注入</h2>
+<p>依赖注入是实现控制反转的一种方式，例如上述例子，可以看到并没有实例化的代码，实例化对象的工作其实交给了控制反转的容器，然后通过依赖注入的方式提供给使用这个对象的地方。</p>
+</article><div class="Footer_footer__316w0"><div class="Footer_footerInfo__Oa_Q4"><a href="https://github.com/zlqxk/awesome-blog">Github</a></div><div class="Footer_footerPvUv__YWOzD" id="busuanzi_container_site_pv"><p>本站总访问量<span id="busuanzi_value_site_pv"></span>次</p><p>访客数<span id="busuanzi_value_site_uv"></span>人次</p></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{}},"page":"/article/ioc-di","query":{},"buildId":"E-yMlcZOffAX6cd0TJKvF","nextExport":true,"autoExport":true,"isFallback":false,"scriptLoader":[]}</script></body></html>

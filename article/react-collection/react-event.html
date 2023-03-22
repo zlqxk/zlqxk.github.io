@@ -1,0 +1,136 @@
+<!DOCTYPE html><html><head><meta name="keywords" content="前端,react,babel,ts,typescript,学习记录"/><meta name="description" content="学习和分享工作生活中遇到的问题，记录前沿的技术，分享技术文章。"/><meta name="google-site-verification" content="s-VsAQCdV_MrjX9LC-rvr6SZ-MYSM4y1vVMJ9Fw7Oxo"/><meta name="viewport" content="width=device-width"/><meta charSet="utf-8"/><title>React 中触发一次事件都发生了什么？</title><meta name="description" content="React 中触发一次事件都发生了什么？"/><meta name="next-head-count" content="4"/><link rel="preload" href="/_next/static/css/cf2d2167c5644ef0de3a.css" as="style"/><link rel="stylesheet" href="/_next/static/css/cf2d2167c5644ef0de3a.css" data-n-g=""/><link rel="preload" href="/_next/static/css/2c29b5f4059231122a7f.css" as="style"/><link rel="stylesheet" href="/_next/static/css/2c29b5f4059231122a7f.css" data-n-p=""/><noscript data-n-css=""></noscript><script defer="" nomodule="" src="/_next/static/chunks/polyfills-a40ef1678bae11e696dba45124eadd70.js"></script><script src="/_next/static/chunks/webpack-fb76148cfcfb42ca18eb.js" defer=""></script><script src="/_next/static/chunks/framework-895f067827ebe11ffe45.js" defer=""></script><script src="/_next/static/chunks/main-c4f2541b93e4ae8b71f8.js" defer=""></script><script src="/_next/static/chunks/pages/_app-472761f2aef6a4dd81fc.js" defer=""></script><script src="/_next/static/chunks/800-724b2f069f0c30072447.js" defer=""></script><script src="/_next/static/chunks/pages/article/react-collection/react-event-8004f14858a04e0d0ed4.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_buildManifest.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_ssgManifest.js" defer=""></script></head><script async="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><body class="dark"><div id="__next"><div class="Layout_layout__1EnHR"><div class="Header_header__3Hw3A"><h1 class="Header_title__2jGsC"><a href="/">BLOG ZHANG</a></h1><div class="Switch_switch__11c0w"><div class="Switch_switchWarp__1Gqov"><div class="Switch_switchLeft__3OCuZ"> <img src="/moon.png" alt="" width="16" height="16"/></div><div class="Switch_switchRigth__1Wjdr"><img src="/sun.png" alt="" width="16" height="16"/></div></div><div class="Switch_switchCheck__1aiIo Switch_dark__2WQ89"></div></div></div><div class="ImgPreview_imgPreview__2OxIp"><img src=""/></div><article class="post_article__2Kkhj"><h1>React 中触发一次事件都发生了什么？</h1>
+<p>3 月 21, 2023 • ☕️☕️☕️ 30 min read</p>
+<h2>1、监听事件</h2>
+<p>要触发事件，首先要监听事件，那 react 是在什么时候监听事件的呢，答案是在 createRoot 的时候。在 react 里有一个<code>listenToAllSupportedEvents</code>方法，他的作用就是收集事件然后做事件监听，核心代码如下。</p>
+<pre class="hljs"><code><span class="hljs-keyword">export</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">listenToAllSupportedEvents</span>(<span class="hljs-params">rootContainerElement: EventTarget</span>) {
+  allNativeEvents.<span class="hljs-title function_">forEach</span>(<span class="hljs-function">(<span class="hljs-params">domEventName</span>) =&gt;</span> {
+    <span class="hljs-keyword">if</span> (!nonDelegatedEvents.<span class="hljs-title function_">has</span>(domEventName)) {
+      <span class="hljs-title function_">listenToNativeEvent</span>(domEventName, <span class="hljs-literal">false</span>, rootContainerElement)
+    }
+    <span class="hljs-title function_">listenToNativeEvent</span>(domEventName, <span class="hljs-literal">true</span>, rootContainerElement)
+  })
+}
+</code></pre>
+<p>我们可以看到这个方法遍历了<code>allNativeEvents</code>，那这个变量又是代表着什么含义呢。在导入 react-dom 这个包的时候，react-dom 会执行以下几个方法。</p>
+<pre class="hljs"><code><span class="hljs-title class_">SimpleEventPlugin</span>.<span class="hljs-title function_">registerEvents</span>()
+<span class="hljs-title class_">EnterLeaveEventPlugin</span>.<span class="hljs-title function_">registerEvents</span>()
+<span class="hljs-title class_">ChangeEventPlugin</span>.<span class="hljs-title function_">registerEvents</span>()
+<span class="hljs-title class_">SelectEventPlugin</span>.<span class="hljs-title function_">registerEvents</span>()
+<span class="hljs-title class_">BeforeInputEventPlugin</span>.<span class="hljs-title function_">registerEvents</span>()
+</code></pre>
+<p>上述五个方法其实本质上都干了一件事情，收集 react 的事件和对应的原生事件，只不过不同的 Plugin 对应的事件不同。</p>
+<p>例如<code>SimpleEventPlugin</code>收集的是<code>click</code>、<code>mouseDown</code>等大家熟悉的事件，并且这类事件不需要做额外的处理，只需要在原来的基础上拼接上<code>on</code>最后得到我们熟悉的<code>onClick</code>。<code>EnterLeaveEventPlugin</code>收集的则是<code>onMouseEnter</code>、<code>onMouseLeave</code>等事件，只不过这类事件比较特殊，并没有对应的原生事件，所以需要 react 来模拟实现，例如<code>onMouseEnter</code>需要<code>mouseout</code>, <code>mouseover</code>这两个原生事件来支持，所以在收集的时候需要将这两个原生事件当做依赖也收集起来，如下代码所示。</p>
+<pre class="hljs"><code><span class="hljs-title function_">registerDirectEvent</span>(<span class="hljs-string">&#x27;onMouseEnter&#x27;</span>, [<span class="hljs-string">&#x27;mouseout&#x27;</span>, <span class="hljs-string">&#x27;mouseover&#x27;</span>])
+</code></pre>
+<p>收集的这些原生事件最后汇总为一个集合，这个集合就是我们上文提到的<code>allNativeEvents</code>，所以<code>allNativeEvents</code>代表的就是<strong>需要监听的原生事件的集合</strong>。接下来我们就需要遍历这个集合，一个一个的处理集合里的事件，也就是上文提到的<code>listenToNativeEvent</code>方法，该方法主要做了以下几件事：</p>
+<p>1、 根据当前正在处理的事件名称，返回当前事件的优先级。</p>
+<pre class="hljs"><code><span class="hljs-comment">// 例如当前处理的是click事件，那么返回的优先级是 DiscreteEventPriority，映射到lane就是同步优先级 - SyncLane</span>
+<span class="hljs-keyword">const</span> eventPriority = <span class="hljs-title function_">getEventPriority</span>(domEventName)
+</code></pre>
+<p>这里我们可以简单了解下都有哪些优先级：</p>
+<pre class="hljs"><code><span class="hljs-comment">// 同步优先级，例如 click</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title class_">DiscreteEventPriority</span>: <span class="hljs-title class_">EventPriority</span> = <span class="hljs-title class_">SyncLane</span> <span class="hljs-comment">// 0</span>
+<span class="hljs-comment">// 输入连续优先级，例如 mouseenter</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title class_">ContinuousEventPriority</span>: <span class="hljs-title class_">EventPriority</span> = <span class="hljs-title class_">InputContinuousLane</span> <span class="hljs-comment">// 4</span>
+<span class="hljs-comment">// 以下两个优先级只针对 message 事件</span>
+<span class="hljs-comment">// 默认优先级</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title class_">DefaultEventPriority</span>: <span class="hljs-title class_">EventPriority</span> = <span class="hljs-title class_">DefaultLane</span> <span class="hljs-comment">// 16</span>
+<span class="hljs-comment">// 最低优先级</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title class_">IdleEventPriority</span>: <span class="hljs-title class_">EventPriority</span> = <span class="hljs-title class_">IdleLane</span> <span class="hljs-comment">// 0b0100000000000000000000000000000</span>
+</code></pre>
+<p>2、根据优先级分配对应的事件的监听事件，例如触发<code>click</code>事件则会调用<code>dispatchDiscreteEvent</code></p>
+<pre class="hljs"><code><span class="hljs-keyword">switch</span> (eventPriority) {
+  <span class="hljs-keyword">case</span> <span class="hljs-title class_">DiscreteEventPriority</span>:
+    listenerWrapper = dispatchDiscreteEvent
+    <span class="hljs-keyword">break</span>
+  <span class="hljs-keyword">case</span> <span class="hljs-title class_">ContinuousEventPriority</span>:
+    listenerWrapper = dispatchContinuousEvent
+    <span class="hljs-keyword">break</span>
+}
+</code></pre>
+<p>但是其实<code>dispatchDiscreteEvent</code>和<code>dispatchContinuousEvent</code>的区别只是在触发的时候设置优先级不同，这两个方法是在触发事件时候调用，不在我们监听事件的范畴，我们放在后面再详细介绍。</p>
+<p>3、在挂载点上注册事件，<code>target</code>就是 react 的挂载点，<code>eventType</code>是事件名称，<code>listener</code>就是第二步返回的事件监听方法。</p>
+<pre class="hljs"><code>target.<span class="hljs-title function_">addEventListener</span>(eventType, listener, <span class="hljs-literal">false</span>)
+</code></pre>
+<p>到这里<strong>监听事件</strong>的步骤就完成了，这时候当 react 首次渲染结束以后，我们就可以与页面进行交互了。</p>
+<h2>2、触发事件</h2>
+<p>上文说到 react 在挂载点监听了一批原生事件，例如我们触发<code>click</code>事件，实际上调用了<code>dispatchDiscreteEvent</code>方法，核心代码如下</p>
+<pre class="hljs"><code><span class="hljs-keyword">function</span> <span class="hljs-title function_">dispatchDiscreteEvent</span>(<span class="hljs-params">domEventName, eventSystemFlags, container, nativeEvent</span>) {
+  <span class="hljs-keyword">const</span> previousPriority = <span class="hljs-title function_">getCurrentUpdatePriority</span>()
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-title function_">setCurrentUpdatePriority</span>(<span class="hljs-title class_">DiscreteEventPriority</span>)
+    <span class="hljs-title function_">dispatchEvent</span>(domEventName, eventSystemFlags, container, nativeEvent)
+  } <span class="hljs-keyword">finally</span> {
+    <span class="hljs-title function_">setCurrentUpdatePriority</span>(previousPriority)
+  }
+}
+</code></pre>
+<p>上述代码可以简单分为四步：</p>
+<ol>
+<li>存储当前更新的优先级</li>
+<li>根据当前事件设置新的优先级</li>
+<li>派发事件</li>
+<li>重置触发事件之前的优先级</li>
+</ol>
+<p>核心部分其实就是 2、3 两步，在监听事件的时候每一类事件就已经确定好了优先级，例如<code>click</code>的优先级是同步优先级，接下来让我们着重看下第二步，第二步的核心就是<code>dispatchEvent</code>方法，该方法在经历了一系列的判断（当时事件是否被阻塞、当前事件冒泡到的根元素是否是挂载点、react 是否存在该事件名称）后，最终会执行以下几段核心逻辑。</p>
+<h3>1、捕获阶段</h3>
+<p>在捕获阶段，react 会去收集<code>Capture</code>类型事件，例如<code>onClickCapture</code>属性，react 从触发事件的 fiber 节点开始向上遍历，一直遍历到根元素，在遍历的过程中收集路径上<code>Capture</code>类属性，最终存储在一个<code>listeners</code>数组中，核心代码如下：</p>
+<pre class="hljs"><code><span class="hljs-keyword">let</span> listeners = []
+
+<span class="hljs-keyword">while</span> (instance !== <span class="hljs-literal">null</span>) {
+  <span class="hljs-keyword">const</span> { stateNode, tag } = instance
+  <span class="hljs-comment">// 如果当前fiber节点有捕获的事件属性，则收集到listeners数组中</span>
+  <span class="hljs-keyword">const</span> listener = <span class="hljs-title function_">getListener</span>(instance, reactEventName)
+  <span class="hljs-keyword">if</span> (listener != <span class="hljs-literal">null</span>) {
+    listeners.<span class="hljs-title function_">push</span>(<span class="hljs-title function_">createDispatchListener</span>(instance, listener, lastHostComponent))
+  }
+  instance = instance.<span class="hljs-property">return</span>
+}
+
+<span class="hljs-keyword">return</span> listeners
+</code></pre>
+<p>通过上述方法，我们就可以收集到从触发事件的元素一直到根节点路径上的所有绑定的事件，然后再遍历<code>listeners</code>执行收集到的回调函数即可，核心代码如下：</p>
+<pre class="hljs"><code><span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = dispatchListeners.<span class="hljs-property">length</span> - <span class="hljs-number">1</span>; i &gt;= <span class="hljs-number">0</span>; i--) {
+  <span class="hljs-keyword">const</span> { instance, currentTarget, listener } = dispatchListeners[i]
+  <span class="hljs-keyword">if</span> (instance !== previousInstance &amp;&amp; event.<span class="hljs-title function_">isPropagationStopped</span>()) {
+    <span class="hljs-keyword">return</span>
+  }
+  <span class="hljs-title function_">executeDispatch</span>(event, listener, currentTarget)
+  previousInstance = instance
+}
+</code></pre>
+<p>通过上述代码可以看出，在遍历<code>listeners</code>执行时候，会有一个<code>isPropagationStopped</code>的判断，这也是为什么我们使用<code>stopPropagation</code>可以阻止事件冒泡的原因。最后通过<code>executeDispatch</code>方法去执行我们注册的事件。</p>
+<pre class="hljs"><code><span class="hljs-keyword">try</span> {
+  func.<span class="hljs-title function_">apply</span>(context, funcArgs)
+} <span class="hljs-keyword">catch</span> (error) {
+  <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">onError</span>(error)
+}
+</code></pre>
+<p>上述代码中，<code>func</code>就是我们注册的事件，可以看到在执行的时候是通过 tryCatch 去包裹的，所以如果我们的事件中有错误抛出，会被<code>onError</code>捕获，这样不会阻塞冒泡事件的执行，然后会在<code>listeners</code>里所有的事件都执行完成以后，再统一抛出异常。</p>
+<pre class="hljs"><code><span class="hljs-keyword">export</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">rethrowCaughtError</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">if</span> (hasRethrowError) {
+    <span class="hljs-keyword">const</span> error = rethrowError
+    hasRethrowError = <span class="hljs-literal">false</span>
+    rethrowError = <span class="hljs-literal">null</span>
+    <span class="hljs-keyword">throw</span> error
+  }
+}
+</code></pre>
+<h3>2、冒泡阶段</h3>
+<p>到这里捕获阶段就执行结束了，在执行完捕获阶段以后，接下来就会执行冒泡阶段，冒泡阶段和捕获阶段的主干逻辑是相同的，只不过会有一些逻辑分支。例如需要收集的事件名称，捕获阶段收集的是<code>onXxxxCapture</code>事件，冒泡阶段收集的是<code>onXxxx</code>事件。</p>
+<pre class="hljs"><code><span class="hljs-keyword">const</span> captureName = reactName !== <span class="hljs-literal">null</span> ? reactName + <span class="hljs-string">&#x27;Capture&#x27;</span> : <span class="hljs-literal">null</span>
+<span class="hljs-keyword">const</span> reactEventName = inCapturePhase ? captureName : reactName
+</code></pre>
+<p>遍历<code>listeners</code>的顺序不同，在捕获阶段是倒序执行，在冒泡阶段是正序执行。</p>
+<pre class="hljs"><code><span class="hljs-keyword">if</span> (inCapturePhase) {
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = dispatchListeners.<span class="hljs-property">length</span> - <span class="hljs-number">1</span>; i &gt;= <span class="hljs-number">0</span>; i--) {
+    ...
+  }
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; dispatchListeners.<span class="hljs-property">length</span>; i++) {
+    ...
+  }
+}
+</code></pre>
+<p>到这里 react 触发一次点击事件所经历的流程就结束了，最后我们总结一下。首先在 react-dom 加载的时候再在挂载点注册了一批原生事件，然后在触发事件的时候通过事件委托的形式，获取到真实触发事件的 dom 节点，然后从这个节点开始，逐步向上遍历 fiber 节点一直到根节点，在遍历过程中去收集 fiber 节点上的事件属性存储到<code>listeners</code>中，然后捕获阶段倒序执行<code>listeners</code>，在冒泡阶段正序执行<code>listeners</code>。如果在执行过程中遇到报错被 react 捕获，然后在<code>listeners</code>中的事件执行完成以后再统一抛出。</p>
+</article><div class="Footer_footer__316w0"><div class="Footer_footerInfo__Oa_Q4"><a href="https://github.com/zlqxk/awesome-blog">Github</a></div><div class="Footer_footerPvUv__YWOzD" id="busuanzi_container_site_pv"><p>本站总访问量<span id="busuanzi_value_site_pv"></span>次</p><p>访客数<span id="busuanzi_value_site_uv"></span>人次</p></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{}},"page":"/article/react-collection/react-event","query":{},"buildId":"E-yMlcZOffAX6cd0TJKvF","nextExport":true,"autoExport":true,"isFallback":false,"scriptLoader":[]}</script></body></html>

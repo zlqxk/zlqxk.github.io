@@ -1,0 +1,384 @@
+<!DOCTYPE html><html><head><meta name="keywords" content="前端,react,babel,ts,typescript,学习记录"/><meta name="description" content="学习和分享工作生活中遇到的问题，记录前沿的技术，分享技术文章。"/><meta name="google-site-verification" content="s-VsAQCdV_MrjX9LC-rvr6SZ-MYSM4y1vVMJ9Fw7Oxo"/><meta name="viewport" content="width=device-width"/><meta charSet="utf-8"/><title>Babel 浅谈</title><meta name="description" content="Babel 浅谈"/><meta name="next-head-count" content="4"/><link rel="preload" href="/_next/static/css/cf2d2167c5644ef0de3a.css" as="style"/><link rel="stylesheet" href="/_next/static/css/cf2d2167c5644ef0de3a.css" data-n-g=""/><link rel="preload" href="/_next/static/css/2c29b5f4059231122a7f.css" as="style"/><link rel="stylesheet" href="/_next/static/css/2c29b5f4059231122a7f.css" data-n-p=""/><noscript data-n-css=""></noscript><script defer="" nomodule="" src="/_next/static/chunks/polyfills-a40ef1678bae11e696dba45124eadd70.js"></script><script src="/_next/static/chunks/webpack-fb76148cfcfb42ca18eb.js" defer=""></script><script src="/_next/static/chunks/framework-895f067827ebe11ffe45.js" defer=""></script><script src="/_next/static/chunks/main-c4f2541b93e4ae8b71f8.js" defer=""></script><script src="/_next/static/chunks/pages/_app-472761f2aef6a4dd81fc.js" defer=""></script><script src="/_next/static/chunks/800-724b2f069f0c30072447.js" defer=""></script><script src="/_next/static/chunks/pages/article/babel-89c9d0ef0342f63e20f8.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_buildManifest.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_ssgManifest.js" defer=""></script></head><script async="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><body class="dark"><div id="__next"><div class="Layout_layout__1EnHR"><div class="Header_header__3Hw3A"><h1 class="Header_title__2jGsC"><a href="/">BLOG ZHANG</a></h1><div class="Switch_switch__11c0w"><div class="Switch_switchWarp__1Gqov"><div class="Switch_switchLeft__3OCuZ"> <img src="/moon.png" alt="" width="16" height="16"/></div><div class="Switch_switchRigth__1Wjdr"><img src="/sun.png" alt="" width="16" height="16"/></div></div><div class="Switch_switchCheck__1aiIo Switch_dark__2WQ89"></div></div></div><div class="ImgPreview_imgPreview__2OxIp"><img src=""/></div><article class="post_article__2Kkhj"><h1>Babel 浅谈</h1>
+<p>11月 01, 2021 • ☕️☕️☕️ 30 min read</p>
+<p>Babel 作为前端工程化体系中不可缺少的一环，“存在感”却是很低的。在平常的业务开发中，往往不会被人直接用到。大部分的开发者都可以准确的说出 Babel 的作用，以及他的工作流程（parse -&gt; transform -&gt; generate）。但是具体每个环节都做了哪些事情，实现的原理可能就没办法很清楚讲出来，今天我们就由浅入深的讲解一下 Babel 到底是怎样偷偷的“改变”的你的代码。</p>
+<p>首先我们要知道，Babel 是一个 JavaScript 编译器，更确切地说是源码到源码的转译器，主要用于在当前和旧浏览器环境中将 ECMAScript 2015+ 代码转换为向后兼容的 JavaScript 版本。以下是 Babel 可以为你做的主要事情：</p>
+<ul>
+<li>转换语法</li>
+<li>对目标环境中缺少的能力提供 Polyfill 功能</li>
+<li>源代码转换</li>
+</ul>
+<p>例如以下代码所示：</p>
+<pre class="hljs"><code><span class="hljs-comment">// Babel Input: ES2015 arrow function</span>
+<span class="hljs-keyword">const</span> res = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>].<span class="hljs-title function_">map</span>(<span class="hljs-function">(<span class="hljs-params">n</span>) =&gt;</span> n + <span class="hljs-number">1</span>)
+
+<span class="hljs-comment">// Babel Output: ES5 equivalent</span>
+<span class="hljs-keyword">var</span> res = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>].<span class="hljs-title function_">map</span>(<span class="hljs-keyword">function</span> (<span class="hljs-params">n</span>) {
+  <span class="hljs-keyword">return</span> n + <span class="hljs-number">1</span>
+})
+</code></pre>
+<p>简单的来说，Babel 就是先将你的源代码 parse 成 AST，然后对 AST 进行一定规则的修改生成新的 AST，最后根据新的 AST 生成转译后的代码。那我们先来讲一下什么是 AST，以及 AST 中一些常见的节点类型。</p>
+<p>首先 AST 也叫抽象语法树，他是对源代码的抽象的树状表示。树的每个节点表示源代码中出现的结构。之所以被称为抽象，是因为它并不会代表真实代码中出现的所有细节，例如 {} 这种，他的结构本身就可以被树状结构所表示。那 Babel AST 都有哪些常见的节点类型呢。</p>
+<blockquote>
+<p>我们可以借助 <a href="https://astexplorer.net/">astexplorer</a> 来更清晰的观察 AST</p>
+</blockquote>
+<ul>
+<li><strong>Literal</strong></li>
+</ul>
+<p>Literal 是字面量的意思，例如我声明了一个字符串，那他的类型就是 StringLiteral。</p>
+<p><img src="/front-end-compilation/StringLiteral.jpg" alt="StringLiteral"></p>
+<p>如果我声明的是一个 number，那他的类型就是 NumericLiteral。</p>
+<p><img src="/front-end-compilation/NumericLiteral.jpg" alt="NumericLiteral"></p>
+<ul>
+<li><strong>Identifier</strong></li>
+</ul>
+<p>Identifier 指的就是 js 中的变量，例如变量名，函数名这些都是 Identifier。</p>
+<p><img src="/front-end-compilation/Identifier.jpg" alt="Identifier"></p>
+<ul>
+<li><strong>Statement</strong></li>
+</ul>
+<p>Statement 指的是语句，比如我们写的 if 语句，for 语句，while 语句等。</p>
+<p><img src="/front-end-compilation/IfStatement.jpg" alt="IfStatement"></p>
+<p><img src="/front-end-compilation/WhileStatement.jpg" alt="WhileStatement"></p>
+<ul>
+<li><strong>Expression</strong></li>
+</ul>
+<p>Expression 是表达式，例如赋值表达式，比较表达式等</p>
+<p><img src="/front-end-compilation/BinaryExpression.jpg" alt="BinaryExpression"></p>
+<p>Babel parse 的 AST 还有很多节点类型，想详细了解可以通过查阅<a href="https://babeljs.io/docs/en/babel-types">文档</a>。</p>
+<p>在了解了什么是 AST，以及 Babel 的 AST 有哪些常见的节点类型以后，我们再来看下究竟是 Babel 中的哪个模块来帮你实现了由源码到 AST 的转换。</p>
+<p>@babel/parser，之前也被称作 Babylon，他的主要作用就是将源代码转换为 AST。并且支持以下四种能力。</p>
+<ul>
+<li>默认启用最新的 ECMAScript 版本（ES2020）。</li>
+<li>注释。</li>
+<li>支持 JSX、Flow、Typescript。</li>
+<li>支持实验性语言提案（接受任何至少 stage-0 的 PR ）。</li>
+</ul>
+<p>@babel/parser 是基于 acorn 的扩展，那什么又是 acorn ？说到这里我们就要再赘述一下 AST 的发展史。最早的 AST 是由 SpiderMonkey 开源的 estree 标准，然后基于 estree 又衍生出了 esprima 和 acorn 两种，由于 acorn 的可扩展性，后续 Eslint（espree） 的 parse 和 Babel（Babel parse） 的 parse 都选择了基于 acorn 来进行扩展，而 typescript 和 webpack 的 parse 则是另外一套标准。</p>
+<p><img src="/front-end-compilation/ASTHistory.jpeg" alt="ASTHistory"></p>
+<p>@babel/parser 的 使用如下所示，第一个参数是要转义的源代码，第二个参数是 options，支持传入一些插件，例如可以使用解析 jsx 和 flow 的插件。</p>
+<pre class="hljs"><code><span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/parser&#x27;</span>).<span class="hljs-title function_">parse</span>(<span class="hljs-string">&#x27;code&#x27;</span>, {
+  <span class="hljs-comment">// parse in strict mode and allow module declarations</span>
+  <span class="hljs-attr">sourceType</span>: <span class="hljs-string">&#x27;module&#x27;</span>,
+
+  <span class="hljs-attr">plugins</span>: [
+    <span class="hljs-comment">// enable jsx and flow syntax</span>
+    <span class="hljs-string">&#x27;jsx&#x27;</span>,
+    <span class="hljs-string">&#x27;flow&#x27;</span>,
+  ],
+})
+</code></pre>
+<p>在 @babel/parser 生成 AST 以后，就需要另一个模块来对 AST 进行操作，这个模块就是 @babel/traverse。</p>
+<p>@babel/traverse 提供了 visitor 函数对遍历到的 AST 进行处理（对 AST 的遍历是深度优先），visitor 提供了 path 的 api 来对 AST 节点进行筛选和操作。在 traverse 的时候，我们又可以通过另一个模块 @babel/types，来检查和构建 AST。</p>
+<p>最后我们可以再通过 @babel/generator 模块将 AST 输出为转换后的源代码，整个操作我们可以用以下代码表示。</p>
+<pre class="hljs"><code><span class="hljs-keyword">const</span> parser = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/parser&#x27;</span>)
+<span class="hljs-keyword">const</span> traverse = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/traverse&#x27;</span>).<span class="hljs-property">default</span>
+<span class="hljs-keyword">const</span> types = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/types&#x27;</span>)
+<span class="hljs-keyword">const</span> generator = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/generator&#x27;</span>).<span class="hljs-property">default</span>
+
+<span class="hljs-comment">/**
+ * 定义我们的源代码
+ * */</span>
+<span class="hljs-keyword">const</span> sourceCode = <span class="hljs-string">`var a = 1`</span>
+
+<span class="hljs-comment">/**
+ * 通过 parse 模块来生成 ast 语法树
+ */</span>
+<span class="hljs-keyword">const</span> ast = parser.<span class="hljs-title function_">parse</span>(sourceCode)
+
+<span class="hljs-comment">/**
+ * 通过 traverse 模块来对 ast 进行遍历和修改
+ */</span>
+<span class="hljs-title function_">traverse</span>(ast, {
+  <span class="hljs-comment">// 对 VariableDeclarator 类型的 AST 进行处理</span>
+  <span class="hljs-title class_">VariableDeclarator</span>(path) {
+    <span class="hljs-comment">// 判断表达式右侧的节点是否是 NumericLiteral 类型，如果是的话将其加1</span>
+    <span class="hljs-keyword">if</span> (types.<span class="hljs-title function_">isNumericLiteral</span>(path.<span class="hljs-property">node</span>.<span class="hljs-property">init</span>)) {
+      path.<span class="hljs-property">node</span>.<span class="hljs-property">init</span>.<span class="hljs-property">value</span> = path.<span class="hljs-property">node</span>.<span class="hljs-property">init</span>.<span class="hljs-property">value</span> + <span class="hljs-number">1</span>
+    }
+  },
+})
+
+<span class="hljs-keyword">const</span> { code } = <span class="hljs-title function_">generator</span>(ast)
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;code: &#x27;</span>, code) <span class="hljs-comment">// var a = 2</span>
+</code></pre>
+<p>除了这几个核心的模块。Babel 还提供了 @babel/code-frame （用于输出错误警告），@babel/template （用于批量创建 AST），@babel/core （对以上几个模块的聚合）。</p>
+<p>有了以上的了解以后，我们就可以尝试开发一个 Babel 的插件。首先我们先来实现一个老生常谈的例子，在调用 console 的地方，打印其行列信息。</p>
+<pre class="hljs"><code><span class="hljs-comment">// 输入</span>
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-number">1</span>)
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">foo</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;foo&#x27;</span>)
+}
+
+<span class="hljs-comment">// 输出</span>
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`line:1, column:1`</span>, <span class="hljs-number">1</span>)
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">foo</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`line:4, column:2`</span>, <span class="hljs-string">&#x27;foo&#x27;</span>)
+}
+</code></pre>
+<p>首先我们可以先通过 <a href="https://astexplorer.net/">astexplorer</a> 来观察我们输入的源码的 AST 语法树</p>
+<p><img src="/front-end-compilation/ques1.jpg" alt="ques1"></p>
+<p>在观察以后，我们开始实现一下。首先引入我们需要的模块。</p>
+<pre class="hljs"><code><span class="hljs-keyword">const</span> sourceCode = <span class="hljs-string">`
+  console.log(1)
+
+  function foo() {
+    console.log(&#x27;foo&#x27;)
+  }
+`</span>
+
+<span class="hljs-keyword">const</span> parser = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/parser&#x27;</span>)
+<span class="hljs-keyword">const</span> traverse = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/traverse&#x27;</span>).<span class="hljs-property">default</span>
+<span class="hljs-keyword">const</span> types = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/types&#x27;</span>)
+<span class="hljs-keyword">const</span> generator = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/generator&#x27;</span>).<span class="hljs-property">default</span>
+</code></pre>
+<p>然后将我们输入的源码转换为 AST</p>
+<pre class="hljs"><code><span class="hljs-keyword">const</span> sourceCode = <span class="hljs-string">`
+  console.log(1)
+
+  function foo() {
+    console.log(&#x27;foo&#x27;)
+  }
+`</span>
+
+<span class="hljs-keyword">const</span> parser = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/parser&#x27;</span>)
+<span class="hljs-keyword">const</span> traverse = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/traverse&#x27;</span>).<span class="hljs-property">default</span>
+<span class="hljs-keyword">const</span> types = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/types&#x27;</span>)
+<span class="hljs-keyword">const</span> generator = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/generator&#x27;</span>).<span class="hljs-property">default</span>
+
+<span class="hljs-keyword">const</span> ast = parser.<span class="hljs-title function_">parse</span>(sourceCode)
+</code></pre>
+<p>核心部分来了，接下来对 AST 进行处理</p>
+<pre class="hljs"><code><span class="hljs-keyword">const</span> sourceCode = <span class="hljs-string">`
+  console.log(1)
+
+  function foo() {
+    console.log(&#x27;foo&#x27;)
+  }
+`</span>
+
+<span class="hljs-keyword">const</span> parser = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/parser&#x27;</span>)
+<span class="hljs-keyword">const</span> traverse = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/traverse&#x27;</span>).<span class="hljs-property">default</span>
+<span class="hljs-keyword">const</span> types = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/types&#x27;</span>)
+<span class="hljs-keyword">const</span> generator = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;@babel/generator&#x27;</span>).<span class="hljs-property">default</span>
+
+<span class="hljs-keyword">const</span> ast = parser.<span class="hljs-title function_">parse</span>(sourceCode)
+
+<span class="hljs-title function_">traverse</span>(ast, {
+  <span class="hljs-comment">// console.log 属于 CallExpression 类型</span>
+  <span class="hljs-title class_">CallExpression</span>(path) {
+    <span class="hljs-comment">/**
+     * 首先判断 path.node.callee 是不是 MemberExpression
+     * 然后判断是否是console打头，&quot;log&quot;, &quot;info&quot;, &quot;error&quot; 结尾
+     * 符合这些条件我们就可以对()里的内容进行修改
+     */</span>
+    <span class="hljs-keyword">if</span> (
+      types.<span class="hljs-title function_">isMemberExpression</span>(path.<span class="hljs-property">node</span>.<span class="hljs-property">callee</span>) &amp;&amp;
+      path.<span class="hljs-property">node</span>.<span class="hljs-property">callee</span>.<span class="hljs-property">object</span>.<span class="hljs-property">name</span> === <span class="hljs-string">&#x27;console&#x27;</span> &amp;&amp;
+      [<span class="hljs-string">&#x27;log&#x27;</span>, <span class="hljs-string">&#x27;info&#x27;</span>, <span class="hljs-string">&#x27;error&#x27;</span>].<span class="hljs-title function_">includes</span>(path.<span class="hljs-property">node</span>.<span class="hljs-property">callee</span>.<span class="hljs-property">property</span>.<span class="hljs-property">name</span>)
+    ) {
+      <span class="hljs-keyword">const</span> { line, column } = path.<span class="hljs-property">node</span>.<span class="hljs-property">loc</span>.<span class="hljs-property">start</span>
+      path.<span class="hljs-property">node</span>.<span class="hljs-property">arguments</span>.<span class="hljs-title function_">unshift</span>(
+        <span class="hljs-comment">/**
+         * https://babeljs.io/docs/en/babel-types
+         * 通过调用 types 的 stringLiteral api 来创建一个 stringLiteral 类型的 ast
+         * */</span>
+        types.<span class="hljs-title function_">stringLiteral</span>(<span class="hljs-string">`line:<span class="hljs-subst">${line}</span>, column:<span class="hljs-subst">${column}</span>`</span>)
+      )
+    }
+  },
+})
+
+<span class="hljs-keyword">const</span> { code } = <span class="hljs-title function_">generator</span>(ast)
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(code)
+</code></pre>
+<p>最后查看控制台数据结果，已经达到我们预期的输出</p>
+<pre class="hljs"><code><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;line:2, column:0}&#x27;</span>, <span class="hljs-number">1</span>)
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">foo</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;line:5, column:2}&#x27;</span>, <span class="hljs-string">&#x27;foo&#x27;</span>)
+}
+</code></pre>
+<p>然后我们只需要将上述的实例改写为符合 Babel 插件格式的语法即可，首先介绍下 Babel 插件的格式，Babel 插件是一个函数，函数的参数就是 types 模块，返回值是一个对象，对象中的 visitor 属性就是 traverse 的 visitor 方法。</p>
+<pre class="hljs"><code><span class="hljs-variable language_">module</span>.<span class="hljs-property">export</span> = <span class="hljs-keyword">function</span> (<span class="hljs-params">{ types }</span>) {
+  <span class="hljs-keyword">return</span> {
+    <span class="hljs-attr">visitor</span>: {<span class="hljs-comment">//...},</span>
+  }
+}
+</code></pre>
+<p>将我们上述的写法改为 Babel 插件的写法，最终的效果就是：</p>
+<pre class="hljs"><code><span class="hljs-variable language_">module</span>.<span class="hljs-property">export</span> = <span class="hljs-keyword">function</span> (<span class="hljs-params">{ types }</span>) {
+  <span class="hljs-keyword">return</span> {
+    <span class="hljs-attr">visitor</span>: {
+      <span class="hljs-title class_">CallExpression</span>(path) {
+        <span class="hljs-keyword">if</span> (
+          types.<span class="hljs-title function_">isMemberExpression</span>(path.<span class="hljs-property">node</span>.<span class="hljs-property">callee</span>) &amp;&amp;
+          path.<span class="hljs-property">node</span>.<span class="hljs-property">callee</span>.<span class="hljs-property">object</span>.<span class="hljs-property">name</span> === <span class="hljs-string">&#x27;console&#x27;</span> &amp;&amp;
+          [<span class="hljs-string">&#x27;log&#x27;</span>, <span class="hljs-string">&#x27;info&#x27;</span>, <span class="hljs-string">&#x27;error&#x27;</span>].<span class="hljs-title function_">includes</span>(path.<span class="hljs-property">node</span>.<span class="hljs-property">callee</span>.<span class="hljs-property">property</span>.<span class="hljs-property">name</span>)
+        ) {
+          <span class="hljs-keyword">const</span> { line, column } = path.<span class="hljs-property">node</span>.<span class="hljs-property">loc</span>.<span class="hljs-property">start</span>
+          path.<span class="hljs-property">node</span>.<span class="hljs-property">arguments</span>.<span class="hljs-title function_">unshift</span>(types.<span class="hljs-title function_">stringLiteral</span>(<span class="hljs-string">`line:<span class="hljs-subst">${line}</span>, column:<span class="hljs-subst">${column}</span>`</span>))
+        }
+      },
+    },
+  }
+}
+</code></pre>
+<p>最后我们用<a href="https://astexplorer.net/">astexplorer</a>来验证下。</p>
+<p><img src="/front-end-compilation/ques1ans.jpg" alt="ques1ans"></p>
+<p>在验证没有问题后，我们就可以将这个插件发包，然后在项目里通过 Bable plugin 的形式引用。或者直接将插件卸载项目里，然后通过相对路径的形式引用也是可以的。</p>
+<p>在实现了上述一个简单的小例子后，我们再来实现一个骚一点的操作。在 react 中，我们经常会遇到根据一个 state 来动态展示一个组件的场景。</p>
+<pre class="hljs"><code><span class="hljs-keyword">import</span> <span class="hljs-title class_">React</span>, { <span class="hljs-variable constant_">FC</span>, useState } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;react&#x27;</span>
+
+<span class="hljs-keyword">const</span> <span class="hljs-title class_">App</span>: <span class="hljs-variable constant_">FC</span> = <span class="hljs-function">(<span class="hljs-params">props</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> [visible, setVisible] = useState&lt;<span class="hljs-title class_">Boolean</span>&gt;(<span class="hljs-literal">false</span>)
+
+  <span class="hljs-keyword">const</span> <span class="hljs-title function_">handleClick</span> = (<span class="hljs-params"></span>) =&gt; <span class="hljs-title function_">setVisible</span>(<span class="hljs-function">(<span class="hljs-params">prev</span>) =&gt;</span> !prev)
+
+  <span class="hljs-keyword">return</span> (
+    <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
+      {visible ? <span class="hljs-tag">&lt;<span class="hljs-name">CustomCom</span> /&gt;</span> : null}
+      <span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">onClick</span>=<span class="hljs-string">{handleClick}</span>&gt;</span>点击<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span>
+  )
+}
+</code></pre>
+<p>而在 vue 中，我们只需要使用 v-if 这个条件属性即可实现同样的效果，那我们可不可以在 react 中也是用类似的写法呢，例如上述例子可以改造为：</p>
+<pre class="hljs"><code><span class="hljs-keyword">import</span> <span class="hljs-title class_">React</span>, { <span class="hljs-variable constant_">FC</span>, useState } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;react&#x27;</span>
+
+<span class="hljs-keyword">const</span> <span class="hljs-title class_">App</span>: <span class="hljs-variable constant_">FC</span> = <span class="hljs-function">(<span class="hljs-params">props</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> [visible, setVisible] = useState&lt;<span class="hljs-title class_">Boolean</span>&gt;(<span class="hljs-literal">false</span>)
+
+  <span class="hljs-keyword">const</span> <span class="hljs-title function_">handleClick</span> = (<span class="hljs-params"></span>) =&gt; <span class="hljs-title function_">setVisible</span>(<span class="hljs-function">(<span class="hljs-params">prev</span>) =&gt;</span> !prev)
+
+  <span class="hljs-keyword">return</span> (
+    <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">CustomCom</span> <span class="hljs-attr">x-if</span>=<span class="hljs-string">{visible}</span> /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">onClick</span>=<span class="hljs-string">{handleClick}</span>&gt;</span>点击<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span>
+  )
+}
+</code></pre>
+<p>这样看起来是不是更简洁一点呢，这个时候其实就可以用到我们刚刚讲过的 Babel 插件的形式来实现，在 AST 中取出 x-if 等号右边的值，然后拼接回来原本 xxx &amp;&amp; xxx 的写法。</p>
+<pre class="hljs"><code><span class="hljs-variable language_">module</span>.<span class="hljs-property">exports</span> = <span class="hljs-keyword">function</span> (<span class="hljs-params">{ types: t }</span>) {
+  <span class="hljs-keyword">return</span> {
+    <span class="hljs-attr">visitor</span>: {
+      <span class="hljs-comment">// 首先我们要处理的节点类型是 JSXElement</span>
+      <span class="hljs-title function_">JSXElement</span>(<span class="hljs-params">path</span>) {
+        <span class="hljs-keyword">const</span> { node } = path
+        <span class="hljs-comment">// 查看开标签的属性中是否有 x-if 的属性</span>
+        <span class="hljs-keyword">const</span> xIfAttr = node.<span class="hljs-property">openingElement</span>.<span class="hljs-property">attributes</span>.<span class="hljs-title function_">find</span>(<span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> {
+          <span class="hljs-keyword">return</span> item.<span class="hljs-property">type</span> === <span class="hljs-string">&#x27;JSXAttribute&#x27;</span> &amp;&amp; item.<span class="hljs-property">name</span>.<span class="hljs-property">name</span> === <span class="hljs-string">&#x27;x-if&#x27;</span>
+        })
+        <span class="hljs-keyword">if</span> (!xIfAttr) <span class="hljs-keyword">return</span>
+        <span class="hljs-comment">// 如果有的话创建一个新的开标签，继承之前标签的除x-if的所有属性</span>
+        <span class="hljs-keyword">const</span> openElement = t.<span class="hljs-title function_">jSXOpeningElement</span>(
+          node.<span class="hljs-property">openingElement</span>.<span class="hljs-property">name</span>,
+          node.<span class="hljs-property">openingElement</span>.<span class="hljs-property">attributes</span>.<span class="hljs-title function_">filter</span>(<span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> {
+            <span class="hljs-keyword">return</span> item.<span class="hljs-property">name</span>.<span class="hljs-property">name</span> !== <span class="hljs-string">&#x27;x-if&#x27;</span>
+          }),
+          node.<span class="hljs-property">openingElement</span>.<span class="hljs-property">selfClosing</span>
+        )
+        <span class="hljs-comment">// 使用新建的开标签 + 原有children + 原有闭标签创建一个新的JSXElement</span>
+        <span class="hljs-keyword">const</span> <span class="hljs-title class_">Element</span> = t.<span class="hljs-title function_">JSXElement</span>(openElement, node.<span class="hljs-property">closingElement</span>, node.<span class="hljs-property">children</span>)
+        <span class="hljs-comment">// 生成一个三目表达式，判断条件就是 x-if 等号右边的值</span>
+        <span class="hljs-keyword">const</span> expression = t.<span class="hljs-title function_">conditionalExpression</span>(
+          xIfAttr.<span class="hljs-property">value</span>.<span class="hljs-property">expression</span>,
+          <span class="hljs-title class_">Element</span>,
+          t.<span class="hljs-title function_">nullLiteral</span>()
+        )
+        path.<span class="hljs-title function_">replaceWith</span>(expression)
+      },
+    },
+  }
+}
+</code></pre>
+<p>让我们来验证一下：</p>
+<p><img src="/front-end-compilation/x-if.jpg" alt="x-if"></p>
+<p>这下我们就可以在 react 中愉快的使用“模板语法了” （手动狗头，要投入生产环境的话还需要考虑很多 case）。这里我之前有发过一个 <a href="https://www.npmjs.com/search?q=babel-plugin-x-if">babel-plugin-x-if</a>的 npm 包，感兴趣的可以拉下来在项目里试一下哦。</p>
+<p>既然有了 x-if，那必然不能少了 x-for。然我们看下 x-for 的实现逻辑。</p>
+<pre class="hljs"><code><span class="hljs-variable language_">module</span>.<span class="hljs-property">exports</span> = <span class="hljs-keyword">function</span> (<span class="hljs-params">{ types: t }</span>) {
+  <span class="hljs-keyword">return</span> {
+    <span class="hljs-attr">visitor</span>: {
+      <span class="hljs-title function_">JSXElement</span>(<span class="hljs-params">path</span>) {
+        <span class="hljs-keyword">const</span> { node } = path
+        <span class="hljs-keyword">const</span> xForAttr = node.<span class="hljs-property">openingElement</span>.<span class="hljs-property">attributes</span>.<span class="hljs-title function_">find</span>(<span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> {
+          <span class="hljs-keyword">return</span> item.<span class="hljs-property">type</span> === <span class="hljs-string">&#x27;JSXAttribute&#x27;</span> &amp;&amp; item.<span class="hljs-property">name</span>.<span class="hljs-property">name</span> === <span class="hljs-string">&#x27;x-for&#x27;</span>
+        })
+        <span class="hljs-keyword">if</span> (!xForAttr) <span class="hljs-keyword">return</span>
+        <span class="hljs-keyword">const</span> xForExpression = xForAttr.<span class="hljs-property">value</span>
+        <span class="hljs-keyword">const</span> judgeArrayMemberExpression = t.<span class="hljs-title class_">MemberExpression</span>(
+          t.<span class="hljs-title function_">identifier</span>(<span class="hljs-string">&#x27;Array&#x27;</span>),
+          t.<span class="hljs-title function_">identifier</span>(<span class="hljs-string">&#x27;isArray&#x27;</span>)
+        )
+        <span class="hljs-keyword">const</span> judgeArrayCallExpression = t.<span class="hljs-title function_">callExpression</span>(judgeArrayMemberExpression, [
+          t.<span class="hljs-title function_">identifier</span>(xForExpression.<span class="hljs-property">expression</span>.<span class="hljs-property">right</span>.<span class="hljs-property">name</span>),
+        ])
+        <span class="hljs-keyword">const</span> xForArrMethodMemberExpression = t.<span class="hljs-title class_">MemberExpression</span>(
+          t.<span class="hljs-title function_">identifier</span>(xForExpression.<span class="hljs-property">expression</span>.<span class="hljs-property">right</span>.<span class="hljs-property">name</span>),
+          t.<span class="hljs-title function_">identifier</span>(<span class="hljs-string">&#x27;map&#x27;</span>)
+        )
+        <span class="hljs-keyword">const</span> xForOpenElement = t.<span class="hljs-title function_">jSXOpeningElement</span>(
+          node.<span class="hljs-property">openingElement</span>.<span class="hljs-property">name</span>,
+          node.<span class="hljs-property">openingElement</span>.<span class="hljs-property">attributes</span>.<span class="hljs-title function_">filter</span>(<span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> {
+            <span class="hljs-keyword">return</span> item.<span class="hljs-property">name</span>.<span class="hljs-property">name</span> !== <span class="hljs-string">&#x27;x-for&#x27;</span>
+          })
+        )
+        <span class="hljs-keyword">const</span> xForElement = t.<span class="hljs-title function_">JSXElement</span>(xForOpenElement, node.<span class="hljs-property">closingElement</span>, node.<span class="hljs-property">children</span>, <span class="hljs-literal">false</span>)
+        <span class="hljs-keyword">const</span> xForReturnStatement = t.<span class="hljs-title class_">ReturnStatement</span>(xForElement)
+        <span class="hljs-comment">// {}</span>
+        <span class="hljs-keyword">const</span> xForInBlockStatement = t.<span class="hljs-title class_">BlockStatement</span>([xForReturnStatement])
+        <span class="hljs-comment">// item =&gt; {</span>
+        <span class="hljs-comment">//   return &lt;li key={item}&gt;{item}&lt;/li&gt;;</span>
+        <span class="hljs-comment">// }</span>
+        <span class="hljs-comment">// 要兼容（item）=&gt; 和 （item, index）=&gt; 两种情况</span>
+        <span class="hljs-keyword">const</span> xForArrowFunctionExpression = t.<span class="hljs-title function_">arrowFunctionExpression</span>(
+          xForExpression.<span class="hljs-property">expression</span>.<span class="hljs-property">left</span>.<span class="hljs-property">type</span> === <span class="hljs-string">&#x27;SequenceExpression&#x27;</span>
+            ? xForExpression.<span class="hljs-property">expression</span>.<span class="hljs-property">left</span>.<span class="hljs-property">expressions</span>
+            : [t.<span class="hljs-title class_">Identifier</span>(xForExpression.<span class="hljs-property">expression</span>.<span class="hljs-property">left</span>.<span class="hljs-property">name</span>)],
+          xForInBlockStatement
+        )
+        <span class="hljs-comment">// arr.map(item =&gt; {</span>
+        <span class="hljs-comment">//   return &lt;li key={item}&gt;{item}&lt;/li&gt;;</span>
+        <span class="hljs-comment">// })</span>
+        <span class="hljs-keyword">const</span> xForCallExpression = t.<span class="hljs-title function_">callExpression</span>(xForArrMethodMemberExpression, [
+          xForArrowFunctionExpression,
+        ])
+        <span class="hljs-comment">// Array.isArray(arr)</span>
+        <span class="hljs-keyword">const</span> xForLogicalExpression = t.<span class="hljs-title class_">LogicalExpression</span>(
+          <span class="hljs-string">&#x27;&amp;&amp;&#x27;</span>,
+          judgeArrayCallExpression,
+          xForCallExpression
+        )
+        <span class="hljs-comment">// Array.isArray(arr) &amp;&amp; arr.map((item, index) =&gt; {</span>
+        <span class="hljs-comment">//   return &lt;li key={index}&gt;{item.label}&lt;/li&gt;;</span>
+        <span class="hljs-comment">// });</span>
+        <span class="hljs-keyword">const</span> xForExpressionStatement = t.<span class="hljs-title class_">ExpressionStatement</span>(xForLogicalExpression)
+        <span class="hljs-comment">// {</span>
+        <span class="hljs-comment">//   Array.isArray(arr) &amp;&amp; arr.map((item, index) =&gt; {</span>
+        <span class="hljs-comment">//     return &lt;li key={index}&gt;{item.label}&lt;/li&gt;;</span>
+        <span class="hljs-comment">//   });</span>
+        <span class="hljs-comment">// }</span>
+        <span class="hljs-keyword">const</span> xForOutBlockStatement = t.<span class="hljs-title function_">blockStatement</span>([xForExpressionStatement])
+        path.<span class="hljs-title function_">replaceWith</span>(xForOutBlockStatement)
+      },
+    },
+  }
+}
+</code></pre>
+<p>x-for 的实现会相对复杂些，且考虑的场景会更多，这里也只是抛砖引玉，给一个基本的实现思路，具体实现大家可以自行尝试一下。按照惯例我们测试一下。</p>
+<p><img src="/front-end-compilation/x-for.jpg" alt="x-for"></p>
+<p>基本上实现了我们想要的效果，同样这个我也有发过一个 <a href="https://www.npmjs.com/search?q=babel-plugin-x-for">babel-plugin-x-for</a> 的包，感兴趣也可以尝试一下。</p>
+<p>通过以上几个例子，其实我们可以发散一下思路，在平时的业务开发中，是不是有靠业务层面比较难实现，但是通过编译维度进行降维打击却可以简单的实现呢。例如自动化埋点、自动生成 api 文档之类？但这些都是建立在我们对工程化体系有一个完整的了解的情况下才会想到。在这里我们只是简单的了解了一下 Babel 的用法。但是在整个前端工程化体系中，涉及到编译技术的除了 Babel，还有 eslint，typescript 等。仅仅对 Babel 的使用有一些了解是远远不够的。但是 Babel 是一个很好的切入点。</p>
+<h4>参考</h4>
+<blockquote>
+<p>https://babeljs.io/docs/en/</p>
+</blockquote>
+<blockquote>
+<p>https://github.com/brigand/babel-plugin-handbook/blob/master/translations/zh-Hans/README.md</p>
+</blockquote>
+<blockquote>
+<p>https://live.juejin.cn/4354/4815025</p>
+</blockquote>
+</article><div class="Footer_footer__316w0"><div class="Footer_footerInfo__Oa_Q4"><a href="https://github.com/zlqxk/awesome-blog">Github</a></div><div class="Footer_footerPvUv__YWOzD" id="busuanzi_container_site_pv"><p>本站总访问量<span id="busuanzi_value_site_pv"></span>次</p><p>访客数<span id="busuanzi_value_site_uv"></span>人次</p></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{}},"page":"/article/babel","query":{},"buildId":"E-yMlcZOffAX6cd0TJKvF","nextExport":true,"autoExport":true,"isFallback":false,"scriptLoader":[]}</script></body></html>

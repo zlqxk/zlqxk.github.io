@@ -1,0 +1,26 @@
+<!DOCTYPE html><html><head><meta name="keywords" content="前端,react,babel,ts,typescript,学习记录"/><meta name="description" content="学习和分享工作生活中遇到的问题，记录前沿的技术，分享技术文章。"/><meta name="google-site-verification" content="s-VsAQCdV_MrjX9LC-rvr6SZ-MYSM4y1vVMJ9Fw7Oxo"/><meta name="viewport" content="width=device-width"/><meta charSet="utf-8"/><title>micro-app 微前端方案原理小结</title><meta name="description" content="micro-app 微前端方案原理小结"/><meta name="next-head-count" content="4"/><link rel="preload" href="/_next/static/css/cf2d2167c5644ef0de3a.css" as="style"/><link rel="stylesheet" href="/_next/static/css/cf2d2167c5644ef0de3a.css" data-n-g=""/><link rel="preload" href="/_next/static/css/2c29b5f4059231122a7f.css" as="style"/><link rel="stylesheet" href="/_next/static/css/2c29b5f4059231122a7f.css" data-n-p=""/><noscript data-n-css=""></noscript><script defer="" nomodule="" src="/_next/static/chunks/polyfills-a40ef1678bae11e696dba45124eadd70.js"></script><script src="/_next/static/chunks/webpack-fb76148cfcfb42ca18eb.js" defer=""></script><script src="/_next/static/chunks/framework-895f067827ebe11ffe45.js" defer=""></script><script src="/_next/static/chunks/main-c4f2541b93e4ae8b71f8.js" defer=""></script><script src="/_next/static/chunks/pages/_app-472761f2aef6a4dd81fc.js" defer=""></script><script src="/_next/static/chunks/800-724b2f069f0c30072447.js" defer=""></script><script src="/_next/static/chunks/pages/article/micro-app-765c66a13598ba861f84.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_buildManifest.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_ssgManifest.js" defer=""></script></head><script async="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><body class="dark"><div id="__next"><div class="Layout_layout__1EnHR"><div class="Header_header__3Hw3A"><h1 class="Header_title__2jGsC"><a href="/">BLOG ZHANG</a></h1><div class="Switch_switch__11c0w"><div class="Switch_switchWarp__1Gqov"><div class="Switch_switchLeft__3OCuZ"> <img src="/moon.png" alt="" width="16" height="16"/></div><div class="Switch_switchRigth__1Wjdr"><img src="/sun.png" alt="" width="16" height="16"/></div></div><div class="Switch_switchCheck__1aiIo Switch_dark__2WQ89"></div></div></div><div class="ImgPreview_imgPreview__2OxIp"><img src=""/></div><article class="post_article__2Kkhj"><h1>micro-app 微前端方案原理小结</h1>
+<p>7 月 12, 2022 • ☕️☕️☕️ 10 min read</p>
+<blockquote>
+<p>本文为阅读 https://github.com/micro-zoe/micro-app/issues/17 小结。</p>
+</blockquote>
+<p><code>micro-app</code> 借鉴 <code>webComponent</code> 的思想，通过 <code>CustomElement</code> 和自定义 <code>ShadowDom</code> 将子应用当做一个 <code>webComponent</code> 组件来渲染，不需要对子应用有侵入性的更改即可实现微前端改造。</p>
+<h2>子应用渲染原理</h2>
+<p>1、 通过 <code>CustomElement</code> 方法自定义一个 <code>micro-app</code> 的 <code>webComponent</code> 组件。</p>
+<p>2、 在该组件内监听 name 和 url 等属性的改变，并且记录下当前的属性。</p>
+<p>3、 当 <code>webComponent</code> 挂载完成后，执行 CreateApp 的逻辑。</p>
+<p>4、 CreateApp 方法里拿到 name 和 url，对当前 url 发起请求获取请求回来的 HTML。</p>
+<p>5、 通过 innerHTML 将 HTML 模板进行渲染，并且遍历 HTML 节点收集 css 和 js 资源。</p>
+<p>6、 在子应用 onMount 前执行 css，将其渲染成 Style 标签放在 head 里。</p>
+<p>7、 在子应用 onMount 后执行 js。</p>
+<p>到这里我们就可以渲染出一个子应用了。</p>
+<h2>js 沙箱原理</h2>
+<p>js 沙箱的本质就是为每一个子应用都创建一个自己的 window 对象。</p>
+<p>1、 创建 <code>micro-window</code>，使用 Proxy 对其代理，取值的时候优先从 <code>micro-window</code> 获取，使用 window 兜底。</p>
+<p>2、 通过 with 函数来改变子应用 js 执行的作用域，将顶层的 window 修改为 <code>micro-window</code>。</p>
+<p>3、 在 <code>micro-window</code> 上重写事件监听，在添加事件监听时收集监听的事件。</p>
+<p>4、 在子应用切换时清空 <code>micro-window</code> 的变量和收集的事件。</p>
+<h2>样式隔离原理</h2>
+<p>收集 CssRule，为每一个样式选择器添加一个[name=&quot;xxx&quot;]的规则来实现样式隔离。这里更推荐使用 css-module。</p>
+<h2>主应用和微应用通信</h2>
+<p>本质上就是一个发布订阅，<code>micro-app</code> 维护一个数据中心，主子应用通过这个数据中心来交互。在这里主应用可以直接通过 <code>webComponent</code> 来传递数据，但是 HTML 标签只能传递基本数据类型，所以为了传递 Object，需要重写 HTMLAttr 方法，在接收到属性名为 data 并且数据类型是 Object 的时候，调用数据中心的 dispatch 方法来通知子应用。主应用也可以手动调用 dispatch 方法来通知子应用，同理子应用也可以调用自己的 dispatch 来向主应用发送数据。</p>
+</article><div class="Footer_footer__316w0"><div class="Footer_footerInfo__Oa_Q4"><a href="https://github.com/zlqxk/awesome-blog">Github</a></div><div class="Footer_footerPvUv__YWOzD" id="busuanzi_container_site_pv"><p>本站总访问量<span id="busuanzi_value_site_pv"></span>次</p><p>访客数<span id="busuanzi_value_site_uv"></span>人次</p></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{}},"page":"/article/micro-app","query":{},"buildId":"E-yMlcZOffAX6cd0TJKvF","nextExport":true,"autoExport":true,"isFallback":false,"scriptLoader":[]}</script></body></html>

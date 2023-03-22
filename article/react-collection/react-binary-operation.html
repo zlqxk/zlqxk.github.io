@@ -1,0 +1,123 @@
+<!DOCTYPE html><html><head><meta name="keywords" content="前端,react,babel,ts,typescript,学习记录"/><meta name="description" content="学习和分享工作生活中遇到的问题，记录前沿的技术，分享技术文章。"/><meta name="google-site-verification" content="s-VsAQCdV_MrjX9LC-rvr6SZ-MYSM4y1vVMJ9Fw7Oxo"/><meta name="viewport" content="width=device-width"/><meta charSet="utf-8"/><title>React 中的二进制运算</title><meta name="description" content="React 中的二进制运算"/><meta name="next-head-count" content="4"/><link rel="preload" href="/_next/static/css/cf2d2167c5644ef0de3a.css" as="style"/><link rel="stylesheet" href="/_next/static/css/cf2d2167c5644ef0de3a.css" data-n-g=""/><link rel="preload" href="/_next/static/css/2c29b5f4059231122a7f.css" as="style"/><link rel="stylesheet" href="/_next/static/css/2c29b5f4059231122a7f.css" data-n-p=""/><noscript data-n-css=""></noscript><script defer="" nomodule="" src="/_next/static/chunks/polyfills-a40ef1678bae11e696dba45124eadd70.js"></script><script src="/_next/static/chunks/webpack-fb76148cfcfb42ca18eb.js" defer=""></script><script src="/_next/static/chunks/framework-895f067827ebe11ffe45.js" defer=""></script><script src="/_next/static/chunks/main-c4f2541b93e4ae8b71f8.js" defer=""></script><script src="/_next/static/chunks/pages/_app-472761f2aef6a4dd81fc.js" defer=""></script><script src="/_next/static/chunks/800-724b2f069f0c30072447.js" defer=""></script><script src="/_next/static/chunks/pages/article/react-collection/react-binary-operation-dd16c221d5f39307fe06.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_buildManifest.js" defer=""></script><script src="/_next/static/E-yMlcZOffAX6cd0TJKvF/_ssgManifest.js" defer=""></script></head><script async="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><body class="dark"><div id="__next"><div class="Layout_layout__1EnHR"><div class="Header_header__3Hw3A"><h1 class="Header_title__2jGsC"><a href="/">BLOG ZHANG</a></h1><div class="Switch_switch__11c0w"><div class="Switch_switchWarp__1Gqov"><div class="Switch_switchLeft__3OCuZ"> <img src="/moon.png" alt="" width="16" height="16"/></div><div class="Switch_switchRigth__1Wjdr"><img src="/sun.png" alt="" width="16" height="16"/></div></div><div class="Switch_switchCheck__1aiIo Switch_dark__2WQ89"></div></div></div><div class="ImgPreview_imgPreview__2OxIp"><img src=""/></div><article class="post_article__2Kkhj"><h1>React 中的二进制运算</h1>
+<p>4月 07, 2022 • ☕️☕️☕️ 30 min read</p>
+<p>React 在添加了 lanes 模型以后，计算是否是同一批次更新和计算更新的优先级时涉及到了一些二进制的运算，为了能理解 React 是如何进行计算的，我们需要先对二进制运算有一定了解。</p>
+<h2>JS 中如何声明二进制</h2>
+<p>使用 0b 或者 0B 开头</p>
+<pre class="hljs"><code><span class="hljs-keyword">const</span> b1 = <span class="hljs-number">0b0001</span> <span class="hljs-comment">// 十进制 - 1</span>
+<span class="hljs-keyword">const</span> b2 = <span class="hljs-number">0b0101</span> <span class="hljs-comment">// 十进制 - 5</span>
+</code></pre>
+<h2>与运算 &amp;</h2>
+<p>与运算符用 &amp; 表示，进行与运算的两位只要有一个 0，那与运算的结果就是 0，反之为 1。</p>
+<pre class="hljs"><code><span class="hljs-comment">// 每一位的与运算规则</span>
+<span class="hljs-number">0</span> &amp; <span class="hljs-number">0</span> = <span class="hljs-number">0</span>
+<span class="hljs-number">0</span> &amp; <span class="hljs-number">1</span> = <span class="hljs-number">0</span>
+<span class="hljs-number">1</span> &amp; <span class="hljs-number">0</span> = <span class="hljs-number">0</span>
+<span class="hljs-number">1</span> &amp; <span class="hljs-number">1</span> = <span class="hljs-number">1</span>
+
+<span class="hljs-comment">// 根据上述可得</span>
+<span class="hljs-number">0b0101</span> &amp; <span class="hljs-number">0b0011</span> = <span class="hljs-number">0b0001</span>
+</code></pre>
+<h2>或运算 |</h2>
+<p>或运算符用 | 表示，进行运算的两位只要有一个是 1，那运算的结果就是 1，反之为 0。</p>
+<pre class="hljs"><code><span class="hljs-comment">// 每一位的或运算规则</span>
+<span class="hljs-number">0</span> | <span class="hljs-number">0</span> = <span class="hljs-number">0</span>
+<span class="hljs-number">0</span> | <span class="hljs-number">1</span> = <span class="hljs-number">1</span>
+<span class="hljs-number">1</span> | <span class="hljs-number">0</span> = <span class="hljs-number">1</span>
+<span class="hljs-number">1</span> | <span class="hljs-number">1</span> = <span class="hljs-number">1</span>
+
+<span class="hljs-comment">// 根据上述可得</span>
+<span class="hljs-number">0b0101</span> | <span class="hljs-number">0b0011</span> = <span class="hljs-number">0b0111</span>
+</code></pre>
+<h2>异或运算 ^</h2>
+<p>异或运算符用 ^ 表示，进行运算的两位只要相同，那运算的结果就是 0，反之为 1。</p>
+<pre class="hljs"><code><span class="hljs-comment">// 每一位的异或运算规则</span>
+<span class="hljs-number">0</span> ^ <span class="hljs-number">0</span> = <span class="hljs-number">0</span>
+<span class="hljs-number">0</span> ^ <span class="hljs-number">1</span> = <span class="hljs-number">1</span>
+<span class="hljs-number">1</span> ^ <span class="hljs-number">0</span> = <span class="hljs-number">1</span>
+<span class="hljs-number">1</span> ^ <span class="hljs-number">1</span> = <span class="hljs-number">0</span>
+
+<span class="hljs-comment">// 根据上述可得</span>
+<span class="hljs-number">0b0101</span> ^ <span class="hljs-number">0b0011</span> = <span class="hljs-number">0b0110</span>
+</code></pre>
+<h2>左移运算符 &lt;&lt;</h2>
+<p>左移运算符用 &lt;&lt; 表示，他的意思就是将一个运算对象的各二进制位全部左移若干位（左边的二进制丢弃，右边补 0）。</p>
+<pre class="hljs"><code><span class="hljs-number">0b1011</span> &lt;&lt; <span class="hljs-number">2</span> = <span class="hljs-number">0b101100</span>
+</code></pre>
+<h2>右移运算符 &gt;&gt;</h2>
+<p>右移运算符用 &gt;&gt; 表示，他的意思就是将一个运算对象的各二进制位全部右若干位（超出的位则抛弃）。</p>
+<pre class="hljs"><code><span class="hljs-number">0b1011</span> &gt;&gt; <span class="hljs-number">2</span> = <span class="hljs-number">0b0010</span>
+</code></pre>
+<h2>按位非 ~</h2>
+<p>按位非运算符用 ~ 表示，在了解它之前首先要了解一下原码、反码、补码。</p>
+<h3>原码</h3>
+<p>简单讲，原码就是第一位是符号位的二进制，1 代表负数，0 代表正数，例如 10001 代表的就是 -1，00001 代表 1。这是最简单的二进制表示，但是使用原码在进行运算时需要先判断某个二进制是正数还是负数，然后再进行运算，否则会出现 1 + (-1) 转化为二进制是 00001 + 10001 = 10011 = -3 而不等于 0 的情况。</p>
+<h3>反码</h3>
+<p>那有没有一种方法可以在运算时忽略符号位，让符号位也参加运算的方式呢，这个就是反码。一个正数的反码还是他本身，一个负数的反码就是在原先基础上符号位保持不变，其余位数取反。</p>
+<pre class="hljs"><code><span class="hljs-comment">// 带符号位八位的二进制表示</span>
+十进制        原码            反码
+<span class="hljs-number">8</span>            <span class="hljs-number">0000</span> <span class="hljs-number">1000</span>      <span class="hljs-number">0000</span> <span class="hljs-number">1000</span>
+-<span class="hljs-number">6</span>           <span class="hljs-number">1000</span> <span class="hljs-number">0110</span>      <span class="hljs-number">1111</span> <span class="hljs-number">1001</span>
+
+<span class="hljs-comment">// 计算 8 - 6</span>
+  <span class="hljs-number">0000</span> <span class="hljs-number">1000</span> <span class="hljs-comment">// 反码</span>
++ <span class="hljs-number">1111</span> <span class="hljs-number">1001</span> <span class="hljs-comment">// 反码</span>
+-----------------
+  <span class="hljs-number">0000</span> <span class="hljs-number">0001</span> <span class="hljs-comment">// 反码</span>
+  <span class="hljs-number">0000</span> <span class="hljs-number">0001</span> <span class="hljs-comment">// 原码 = 1，比实际结果2要小1</span>
+</code></pre>
+<h3>补码</h3>
+<p>根据反码的例子可见，反码的运算结果也并非准确。而且反码还会存在+0 和-0 的情况，但实际上+0 和-0 所代表的的意义并无区别。为了解决反码带来的问题，人们又引入了补码的概念，其实参考生活中的场景，例如一个时钟，当前时间是 10 点，那么无论是减去 2 还是加上 10，最终指针指向的都是 8 这个位置，因为一个时钟所能代表的最大数为 12，所以当超过 12 时，超过 12 的部分就会被忽略，这也就是我们常说的取模。那转换到二进制这里，我们继续看 8 和 6 的运算。</p>
+<pre class="hljs"><code><span class="hljs-comment">// 不带符号位八位的二进制表示</span>
+十进制        原码
+<span class="hljs-number">8</span>            <span class="hljs-number">0000</span> <span class="hljs-number">1000</span>
+<span class="hljs-number">6</span>            <span class="hljs-number">0000</span> <span class="hljs-number">0110</span>
+</code></pre>
+<p>我们计算 8 - 6，根据上述时钟的思想，a - b 就等于 a 加上当前二进制所能代表的最多个数减去 b，也就是 a + (Max - b)，八位二进制所能代表的最多个数是 256，所以 8 - 6 可以转换为 8 + (256 - 6) = 258，258 对应的二进制数为 100000010，移除最左侧超出的位数，00000010 结果正好等于 2，所以 256 - 6 这个数也就是 6 的补码，我们再观察 -6 和 256 - 6 = 250 的关系发现，-6 的绝对值加上 250 等于八位二进制所能代表的最大数 1111 1111 加上 1，所以负数的补码就是这个负数对应的反码加上 1。</p>
+<pre class="hljs"><code><span class="hljs-comment">// 带符号位八位的二进制表示</span>
+十进制        原码            补码
+<span class="hljs-number">8</span>            <span class="hljs-number">0000</span> <span class="hljs-number">1000</span>      <span class="hljs-number">0000</span> <span class="hljs-number">1000</span>
+-<span class="hljs-number">6</span>           <span class="hljs-number">1000</span> <span class="hljs-number">0110</span>      <span class="hljs-number">1111</span> <span class="hljs-number">1010</span>
+
+<span class="hljs-comment">// 计算 8 - 6</span>
+  <span class="hljs-number">0000</span> <span class="hljs-number">1000</span> <span class="hljs-comment">// 补码</span>
++ <span class="hljs-number">1111</span> <span class="hljs-number">1010</span> <span class="hljs-comment">// 补码</span>
+-----------------
+  <span class="hljs-number">0000</span> <span class="hljs-number">0010</span> <span class="hljs-comment">// 补码</span>
+  <span class="hljs-number">0000</span> <span class="hljs-number">0010</span> <span class="hljs-comment">// 原码 = 2，符合真实结果</span>
+</code></pre>
+<p>在了解了原码、反码、补码以后，我们再来看按位非 ~ 的运算，按位非就是对二进制的每一位都取反，因为计算机所存储的数字都是以补码的形式存储，所以</p>
+<pre class="hljs"><code><span class="hljs-keyword">const</span> a = <span class="hljs-number">5</span> <span class="hljs-comment">// 补码 00000000000000000000000000000101</span>
+<span class="hljs-keyword">const</span> b = -<span class="hljs-number">3</span> <span class="hljs-comment">// 补码 11111111111111111111111111111101</span>
+
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(~a) <span class="hljs-comment">// 对 a 的每一位取反得新的补码 11111111111111111111111111111010</span>
+<span class="hljs-comment">// 补码转反码（补码减1） 11111111111111111111111111111001</span>
+<span class="hljs-comment">// 反码转原码（除符号位取反）00000000000000000000000000000110</span>
+<span class="hljs-comment">// 十进制 -6</span>
+
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(~b) <span class="hljs-comment">// 00000000000000000000000000000010</span>
+<span class="hljs-comment">// 十进制 2</span>
+</code></pre>
+<p>在对二进制运算有了一定了解以后，我们来看一下 React 当中都运用到了哪些二进制运算</p>
+<h2>mergeLanes</h2>
+<p>合并两个 lane 到一个 lanes 当中，用来将多个更新优先级合并到一个批次</p>
+<pre class="hljs"><code><span class="hljs-keyword">export</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">mergeLanes</span>(<span class="hljs-params">a: Lanes | Lane, b: Lanes | Lane</span>): <span class="hljs-title class_">Lanes</span> {
+  <span class="hljs-keyword">return</span> a | b
+}
+</code></pre>
+<h2>intersectLanes</h2>
+<p>TODO</p>
+<pre class="hljs"><code><span class="hljs-keyword">export</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">intersectLanes</span>(<span class="hljs-params">a: Lanes | Lane, b: Lanes | Lane</span>): <span class="hljs-title class_">Lanes</span> {
+  <span class="hljs-keyword">return</span> a &amp; b
+}
+</code></pre>
+<h2>getHighestPriorityLane</h2>
+<p>获取当前更新批次中优先级最高的优先级（lanes 中越靠右优先级越高）,在上文我们已经提到过，
+在计算机中的数字都是通过补码的形式存储的，所以 -lanes 就是 lanes 的反码再加 1，也就是 ~lanes + 1，
+所以 lanes &amp; (~lanes + 1)最右侧的 1 会一直进位到第一个 0，例如 lanes 为 00100，
+则~lanes + 1 为 11100，00100 &amp; 11100 = 00100，这样就将优先级最高的 lane 取出来了。</p>
+<pre class="hljs"><code><span class="hljs-keyword">export</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">getHighestPriorityLane</span>(<span class="hljs-params">lanes: Lanes</span>): <span class="hljs-title class_">Lane</span> {
+  <span class="hljs-keyword">return</span> lanes &amp; -lanes
+}
+</code></pre>
+<h2>持续更新中...</h2>
+</article><div class="Footer_footer__316w0"><div class="Footer_footerInfo__Oa_Q4"><a href="https://github.com/zlqxk/awesome-blog">Github</a></div><div class="Footer_footerPvUv__YWOzD" id="busuanzi_container_site_pv"><p>本站总访问量<span id="busuanzi_value_site_pv"></span>次</p><p>访客数<span id="busuanzi_value_site_uv"></span>人次</p></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{}},"page":"/article/react-collection/react-binary-operation","query":{},"buildId":"E-yMlcZOffAX6cd0TJKvF","nextExport":true,"autoExport":true,"isFallback":false,"scriptLoader":[]}</script></body></html>
