@@ -16,4 +16,4 @@ git commit -m 'deploy'
 # 如果发布到 https://<USERNAME>.github.io/<REPO>
 git push -f https://github.com/zlqxk/awesome-blog.git master:gh-pages
 
-cd -
+cd -git l
