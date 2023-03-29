@@ -1,5 +1,11 @@
 export default [
   {
+    title: 'React 中触发setState都发生了什么？',
+    subtitle: 'React 中触发setState都发生了什么？',
+    dateAndTime: '3月 29, 2023 • ☕️☕️☕️ 30 min read',
+    href: '/article/react-collection/react-setState',
+  },
+  {
     title: 'React 中触发一次事件都发生了什么？',
     subtitle: 'React 中触发一次事件都发生了什么？',
     dateAndTime: '3月 21, 2023 • ☕️☕️☕️ 30 min read',
